@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: stat-server
+    name: stats-server
 
   datasource:
     driver-class-name: org.postgresql.Driver

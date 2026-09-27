@@ -30,7 +30,7 @@ services:
       retries: 10
 
   stats-server:
-    build: stat/stat-server
+    build: stat/stats-server
     container_name: stats-server
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/stats
