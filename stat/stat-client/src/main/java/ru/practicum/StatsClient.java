@@ -25,7 +25,7 @@ public class StatsClient {
                 .getInstances("stat-server")
                 .stream()
                 .findFirst()
-                .orElseThrow( ()-> new IllegalStateException("stat-server not found"));
+                .orElseThrow(() -> new IllegalStateException("stat-server not found"));
     }
 
     private URI getStatServerUri(String path) {
@@ -58,7 +58,7 @@ public class StatsClient {
                 .queryParam("end",end)
                 .queryParam("unique",unique);
 
-        if(uris !=null && !uris.isEmpty()) {
+        if (uris != null && !uris.isEmpty()) {
             uriBuilder.queryParam("uris",uris);
         }
 

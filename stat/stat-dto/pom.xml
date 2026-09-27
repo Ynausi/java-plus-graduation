@@ -11,6 +11,8 @@
 
     <artifactId>stat-dto</artifactId>
 
+
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -39,6 +41,7 @@
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
