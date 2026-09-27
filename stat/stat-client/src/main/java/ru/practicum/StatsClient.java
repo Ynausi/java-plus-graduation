@@ -22,10 +22,10 @@ public class StatsClient {
 
     private ServiceInstance getStatServerInstance() {
         return discoveryClient
-                .getInstances("stat-server")
+                .getInstances("stats-server")
                 .stream()
                 .findFirst()
-                .orElseThrow(() -> new IllegalStateException("stat-server not found"));
+                .orElseThrow(() -> new IllegalStateException("stats-server not found"));
     }
 
     private URI getStatServerUri(String path) {
