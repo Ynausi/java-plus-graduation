@@ -12,8 +12,10 @@
 
     <name>Explore With Me</name>
     <modules>
+        <module>core</module>
         <module>stat</module>
-        <module>main-service</module>
+        <module>infra</module>
+
     </modules>
 
     <groupId>ru.practicum</groupId>
@@ -23,8 +25,10 @@
 
     <properties>
         <java.version>21</java.version>
+        <lombok.version>1.18.32</lombok.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mapstruct.version>1.6.3</mapstruct.version>
+        <spring-cloud.version>2023.0.1</spring-cloud.version>
     </properties>
 
     <dependencyManagement>
@@ -43,7 +47,7 @@
 
             <dependency>
                 <groupId>ru.practicum</groupId>
-                <artifactId>stat-server</artifactId>
+                <artifactId>stats-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -72,6 +76,21 @@
                 <version>${querydsl.version}</version>
                 <classifier>jakarta</classifier>
             </dependency>
+
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 

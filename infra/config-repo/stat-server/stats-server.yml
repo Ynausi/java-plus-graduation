@@ -1,0 +1,23 @@
+server:
+  port: 0
+
+spring:
+  application:
+    name: stats-server
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:6642/stats
+    username: stats
+    password: stats
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+  jackson:
+    date-format: "yyyy-MM-dd HH:mm:ss"
+
+  mvc:
+    format:
+      date-time: "yyyy-MM-dd HH:mm:ss"
