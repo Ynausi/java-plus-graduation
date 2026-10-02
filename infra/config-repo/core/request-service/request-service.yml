@@ -1,0 +1,21 @@
+server:
+  port: 0
+
+spring:
+  application:
+    name: request-service
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:6645/requests
+    username: requests
+    password: requests
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

@@ -104,6 +104,25 @@ services:
     ports:
       - "6644:5432"
     environment:
-      POSTRES_DB: users
+      POSTGRES_DB: users
       POSTGRES_USER: users
       POSTGRES_PASSWORD: users
+    healthcheck:
+      test: pg_isready -q -d stats -U stats
+      timeout: 5s
+      interval: 5s
+      retries: 10
+
+  requests-db:
+    image: postgres:16.1
+    ports:
+      - "6645:5432"
+    environment:
+      POSTGRES_DB: requests
+      POSTGRES_USER: requests
+      POSTGRES_PASSWORD: requests
+    healthcheck:
+      test: pg_isready -q -d stats -U stats
+      timeout: 5s
+      interval: 5s
+      retries: 10
