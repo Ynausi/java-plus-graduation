@@ -1,4 +1,4 @@
-package ru.practicum.repository;
+package repository;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -27,7 +27,7 @@ public interface EventReactionRepository extends JpaRepository<EventReaction, Lo
                                                     @Param("reactionType") ReactionType reactionType,
                                                     Pageable pageable);
 
-    @Query("SELECT new ru.practicum.ru.practicum.dto.users.UserRatingStatsDto(" +
+    @Query("SELECT new ru.practicum.dto.users.UserRatingStatsDto(" +
             "r.event.initiator.id, " +
             "SUM(CASE WHEN r.reactionType = 'LIKE' THEN 1 ELSE 0 END), " +
             "SUM(CASE WHEN r.reactionType = 'DISLIKE' THEN 1 ELSE 0 END)) " +
