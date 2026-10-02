@@ -1,9 +1,8 @@
-package model;
+package ru.practicum.model;
 
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import ru.practicum.model.ReactionType;
 
 import java.time.LocalDateTime;
 
@@ -25,9 +24,8 @@ public class EventReaction {
     @JoinColumn(name = "event_id", nullable = false)
     private Event event;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User reactor;
+    @Column(name = "user_id", nullable = false)
+    private Long reactor;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

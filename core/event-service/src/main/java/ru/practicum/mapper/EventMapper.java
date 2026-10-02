@@ -3,10 +3,13 @@ package ru.practicum.mapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
-import ru.practicum.dto.event.*;
-import ru.practicum.model.*;
+import ru.practicum.dto.*;
+import ru.practicum.model.Event;
+import ru.practicum.model.EventReaction;
+import ru.practicum.model.Location;
+import ru.practicum.model.ReactionType;
 
-@Mapper(componentModel = "spring", uses = {CategoryMapper.class, UserMapper.class})
+@Mapper(componentModel = "spring")
 public interface EventMapper {
 
     @Mapping(target = "eventDate", source = "eventDate")

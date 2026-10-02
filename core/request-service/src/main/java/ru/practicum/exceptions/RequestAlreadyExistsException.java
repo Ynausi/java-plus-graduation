@@ -1,7 +1,7 @@
 package ru.practicum.exceptions;
 
-public class UserAlreadyExistsException extends RuntimeException {
-    public UserAlreadyExistsException(String message) {
+public class RequestAlreadyExistsException extends RuntimeException {
+    public RequestAlreadyExistsException(String message) {
         super(message);
     }
 }

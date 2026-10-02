@@ -1,23 +1,23 @@
-package ru.practicum.service.event;
+package ru.practicum.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.dto.event.EventReactionDto;
-import ru.practicum.dto.users.UserRatingStatsDto;
-import ru.practicum.dto.users.UserShortDto;
+import ru.practicum.dto.EventReactionDto;
+import ru.practicum.dto.UserRatingStatsDto;
+import ru.practicum.dto.UserShortDto;
 import ru.practicum.exception.BadRequestException;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.EventMapper;
 import ru.practicum.mapper.UserMapper;
-import ru.practicum.model.*;
+import ru.practicum.model.Event;
+import ru.practicum.model.EventReaction;
+import ru.practicum.model.ReactionType;
 import ru.practicum.repository.EventReactionRepository;
-import ru.practicum.repository.ParticipationRequestRepository;
-import ru.practicum.repository.UsersRepository;
-import ru.practicum.repository.event.EventRepository;
+import ru.practicum.repository.EventRepository;
 
 import java.time.LocalDateTime;
 import java.util.Collections;

@@ -1,4 +1,4 @@
-package ru.practicum.dto.event;
+package ru.practicum.dto;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;

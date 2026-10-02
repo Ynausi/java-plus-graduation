@@ -1,4 +1,4 @@
-package controller;
+package ru.practicum.controller;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -7,14 +7,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.dto.event.EventFullDto;
-import ru.practicum.dto.event.EventShortDto;
-import ru.practicum.dto.event.NewEventDto;
-import ru.practicum.dto.event.UpdateEventUserRequest;
-import ru.practicum.dto.requests.EventRequestStatusUpdateRequest;
-import ru.practicum.dto.requests.EventRequestStatusUpdateResult;
-import ru.practicum.dto.requests.ParticipationRequestDto;
-import ru.practicum.service.event.EventService;
+import ru.practicum.dto.EventFullDto;
+import ru.practicum.dto.EventShortDto;
+import ru.practicum.dto.NewEventDto;
+import ru.practicum.dto.UpdateEventUserRequest;
+import ru.practicum.dto.ParticipationRequestDto;
+import ru.practicum.service.EventService;
 
 import java.util.List;
 

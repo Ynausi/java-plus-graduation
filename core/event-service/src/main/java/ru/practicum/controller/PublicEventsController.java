@@ -1,15 +1,15 @@
-package controller;
+package ru.practicum.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.dto.event.EventFullDto;
-import ru.practicum.dto.event.EventSearchFilterPublic;
-import ru.practicum.dto.event.EventShortDto;
-import ru.practicum.dto.event.PublicEventSort;
-import ru.practicum.service.event.EventService;
+import ru.practicum.dto.EventFullDto;
+import ru.practicum.dto.EventSearchFilterPublic;
+import ru.practicum.dto.EventShortDto;
+import ru.practicum.dto.PublicEventSort;
+import ru.practicum.service.EventService;
 
 import java.time.LocalDateTime;
 import java.util.List;

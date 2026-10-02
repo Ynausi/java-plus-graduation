@@ -1,10 +1,11 @@
-package ru.practicum.repository.event;
+package ru.practicum.repository;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import ru.practicum.model.Event;
+import ru.practicum.repository.event.EventQuerydslRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;

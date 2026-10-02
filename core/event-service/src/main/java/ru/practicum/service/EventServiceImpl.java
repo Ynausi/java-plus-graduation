@@ -1,4 +1,4 @@
-package ru.practicum.service.event;
+package ru.practicum.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -9,27 +9,23 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.StatsClient;
-import ru.practicum.dto.HitRequestDto;
-import ru.practicum.dto.StatsViewDto;
-import ru.practicum.dto.event.*;
-import ru.practicum.dto.requests.EventRequestStatusUpdateRequest;
-import ru.practicum.dto.requests.EventRequestStatusUpdateResult;
-import ru.practicum.dto.requests.ParticipationRequestDto;
-import ru.practicum.exception.BadRequestException;
-import ru.practicum.exception.ConflictException;
-import ru.practicum.exception.NotFoundException;
+import ru.practicum.dto.*;
+import ru.practicum.exceptions.BadRequestException;
+import ru.practicum.exceptions.ConflictException;
+import ru.practicum.exceptions.NotFoundException;
 import ru.practicum.mapper.EventMapper;
-import ru.practicum.mapper.ParticipationRequestMapper;
-import ru.practicum.model.*;
-import ru.practicum.repository.CategoryRepository;
+import ru.practicum.model.Event;
+import ru.practicum.model.EventState;
+import ru.practicum.model.ReactionProjection;
 import ru.practicum.repository.EventReactionRepository;
-import ru.practicum.repository.ParticipationRequestRepository;
-import ru.practicum.repository.UsersRepository;
-import ru.practicum.repository.event.EventRepository;
+import ru.practicum.repository.EventRepository;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static ru.practicum.model.EventState.PUBLISHED;
@@ -40,14 +36,10 @@ import static ru.practicum.model.EventState.PUBLISHED;
 @Transactional(readOnly = true)
 public class EventServiceImpl implements EventService {
 
-    private final ParticipationRequestRepository requestRepository;
-    private final CategoryRepository categoryRepository;
-    private final EventRepository eventRepository;
-    private final UsersRepository usersRepository;
     private final EventReactionRepository eventReactionRepository;
     private final StatsClient statsClient;
     private final EventMapper eventMapper;
-    private final ParticipationRequestMapper requestMapper;
+    private final EventRepository eventRepository;
 
     private static final DateTimeFormatter FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
@@ -63,18 +55,6 @@ public class EventServiceImpl implements EventService {
         List<Event> events = eventRepository.findAllByInitiatorId(userId, pageable);
 
         return enrichShortDtos(events);
-    }
-
-    @Override
-    public List<ParticipationRequestDto> getRequestsByEvent(Long userId, Long eventId) {
-        getUserByIdOrThrow(userId);
-        Event event = getEventByIdOrThrow(eventId);
-
-        if (!event.getInitiator().getId().equals(userId))
-            throw new NotFoundException("Пользователь не является инициатором этого события");
-        return requestRepository.findAllByEventId(eventId).stream()
-                .map(requestMapper::toDto)
-                .toList();
     }
 
     @Override
@@ -126,12 +106,17 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    public EventForRequestDto getEventById(Long eventId) {
+        return null;
+    }
+
+    @Override
     @Transactional
     public EventFullDto updateEvent(Long userId, Long eventId, UpdateEventUserRequest updateEventUserRequest) {
         getUserByIdOrThrow(userId);
         Event event = getEventByIdOrThrow(eventId);
 
-        if (!event.getInitiator().getId().equals(userId)) {
+        if (!event.getInitiator().equals(userId)) {
             throw new ConflictException("Пользователь не является инициатором этого события");
         }
 
@@ -181,63 +166,6 @@ public class EventServiceImpl implements EventService {
             event.setTitle(updateEventUserRequest.getTitle());
 
         return eventMapper.toEventFullDto(eventRepository.save(event));
-    }
-
-    @Override
-    @Transactional
-    public EventRequestStatusUpdateResult updateRequestStatus(Long userId,
-                                                              Long eventId,
-                                                              EventRequestStatusUpdateRequest updateRequest) {
-        getUserByIdOrThrow(userId);
-        Event event = getEventByIdOrThrow(eventId);
-
-        if (!event.getInitiator().getId().equals(userId)) {
-            throw new ConflictException("Пользователь не является инициатором этого события");
-        }
-
-        long confirmedCount = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
-        if (event.getParticipantLimit() > 0 && confirmedCount >= event.getParticipantLimit()) {
-            throw new ConflictException("Лимит участников для данного события уже исчерпан");
-        }
-
-        List<ParticipationRequest> requests = requestRepository.findAllById(updateRequest.getRequestIds());
-
-        for (ParticipationRequest request : requests) {
-            if (!request.getEvent().getId().equals(eventId)) {
-                throw new BadRequestException("Запрос не относится к данному событию");
-            }
-            if (!request.getStatus().equals(RequestStatus.PENDING)) {
-                throw new ConflictException("Статус можно менять только у заявок, находящихся в состоянии ожидания");
-            }
-        }
-
-        List<ParticipationRequest> confirmedRequests = new ArrayList<>();
-        List<ParticipationRequest> rejectedRequests = new ArrayList<>();
-        RequestStatus targetStatus = updateRequest.getStatus();
-
-        if (targetStatus == RequestStatus.REJECTED) {
-            for (ParticipationRequest request : requests) {
-                request.setStatus(RequestStatus.REJECTED);
-                rejectedRequests.add(request);
-            }
-        } else if (targetStatus == RequestStatus.CONFIRMED) {
-            for (ParticipationRequest request : requests) {
-                if (event.getParticipantLimit() == 0 || confirmedCount < event.getParticipantLimit()) {
-                    request.setStatus(RequestStatus.CONFIRMED);
-                    confirmedRequests.add(request);
-                    confirmedCount++;
-                } else {
-                    request.setStatus(RequestStatus.REJECTED);
-                    rejectedRequests.add(request);
-                }
-            }
-        }
-
-        requestRepository.saveAll(requests);
-        return EventRequestStatusUpdateResult.builder()
-                .confirmedRequests(confirmedRequests.stream().map(requestMapper::toDto).toList())
-                .rejectedRequests(rejectedRequests.stream().map(requestMapper::toDto).toList())
-                .build();
     }
 
     @Override
@@ -468,20 +396,6 @@ public class EventServiceImpl implements EventService {
                     return shortDto;
                 })
                 .toList();
-    }
-
-    private User getUserByIdOrThrow(Long userId) {
-        return usersRepository.findById(userId)
-                .orElseThrow(
-                        () -> new NotFoundException("Пользователь c id - " + userId + " не найден или недоступен")
-                );
-    }
-
-    private Category getCategoryByIdOrThrow(Long categoryId) {
-        return categoryRepository.findById(categoryId)
-                .orElseThrow(
-                        () -> new NotFoundException("Категория с id - " + categoryId + " не найдена")
-                );
     }
 
     private Event getEventByIdOrThrow(Long eventId) {

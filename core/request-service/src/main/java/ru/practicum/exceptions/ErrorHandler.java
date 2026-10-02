@@ -11,8 +11,8 @@ import java.time.LocalDateTime;
 @RestControllerAdvice
 public class ErrorHandler {
 
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<ApiError> handleUserNotFound(UserNotFoundException e) {
+    @ExceptionHandler(RequestNotFoundException.class)
+    public ResponseEntity<ApiError> handleRequestNotFound(RequestNotFoundException e) {
         ApiError error = ApiError.builder()
                 .status(HttpStatus.NOT_FOUND)
                 .reason("The required object was not found")
@@ -26,8 +26,8 @@ public class ErrorHandler {
 
     }
 
-    @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<ApiError> handleUserAlreadyExists(UserAlreadyExistsException e) {
+    @ExceptionHandler(RequestAlreadyExistsException.class)
+    public ResponseEntity<ApiError> handleRequestAlreadyExists(RequestAlreadyExistsException e) {
         ApiError error = ApiError.builder()
                 .status(HttpStatus.CONFLICT)
                 .reason("Already exist")

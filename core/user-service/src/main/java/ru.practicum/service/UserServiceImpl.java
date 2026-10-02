@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.dto.NewUserRequest;
 import ru.practicum.dto.UserDto;
+import ru.practicum.exceptions.UserNotFoundException;
 import ru.practicum.mapper.UserMapper;
 import ru.practicum.model.User;
 import ru.practicum.repository.UsersRepository;
@@ -36,6 +37,14 @@ public class UserServiceImpl implements UserService {
         return users.stream()
                 .map(userMapper::userToUserDto)
                 .toList();
+    }
+
+    @Override
+    public UserDto getUser(Long userId) {
+       UserDto response = userMapper.userToUserDto(
+               usersRepository.findById(userId).orElseThrow(() ->
+                       new UserNotFoundException("No user with id:" + userId)));
+       return response;
     }
 
     @Override

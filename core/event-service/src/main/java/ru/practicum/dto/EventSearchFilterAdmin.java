@@ -1,4 +1,4 @@
-package ru.practicum.dto.event;
+package ru.practicum.dto;
 
 import ru.practicum.model.EventState;
 

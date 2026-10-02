@@ -1,4 +1,4 @@
-package model;
+package ru.practicum.model;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -29,16 +29,11 @@ public class Event {
     @Column(name = "description", nullable = false, length = 7000)
     private String description;
 
-    @OneToMany(mappedBy = "event")
-    private List<ParticipationRequest> participationRequests = new ArrayList<>();
+    @Column(name = "user_id")
+    private Long initiator;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User initiator;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id")
-    private Category category;
+    @Column(name = "category_id")
+    private Long category;
 
     @Column(name = "event_date", nullable = false)
     private LocalDateTime eventDate;

@@ -27,10 +27,10 @@ spring:
             max-age: 3600
 
       routes:
-        - id: main-service
-          uri: lb://main-service
+        - id: main-ru.practicum.service
+          uri: lb://main-ru.practicum.service
           predicates:
-            - Path=/categories/**,/admin/categories/**,/admin/compilations/**,/compilations/**,/admin/events/**,/users/**,/events/**,/v1/admin/ratings/**,/v1/{userId}/ratings/**,/v1/ratings/**,/users/{userId}/**,/admin/users/**
+            - Path=/categories/**,/admin/categories/**,/admin/compilations/**,/compilations/**,/admin/events/**,/users/**,/events/**,/v1/admin/ratings/**,/v1/{userId}/ratings/**,/v1/ratings/**,/users/{userId}/**
           filters:
             - name: Retry
               args:
@@ -44,3 +44,8 @@ spring:
                 backoff:
                   firstBackoff: 100ms
                   maxBackoff: 500ms
+
+        - id: user-ru.practicum.service
+          uri: lb://user-ru.practicum.service
+          predicates:
+            - Path=/admin/users/**

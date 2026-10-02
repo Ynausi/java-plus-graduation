@@ -1,10 +1,11 @@
-package ru.practicum.exception;
+package ru.practicum.exceptions;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.http.HttpStatus;
+import ru.practicum.exception.ErrorDetail;
 
 import java.time.LocalDateTime;
 import java.util.List;

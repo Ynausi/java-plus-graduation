@@ -3,6 +3,8 @@ package ru.practicum.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.dto.EventRequestStatusUpdateRequest;
+import ru.practicum.dto.EventRequestStatusUpdateResult;
 import ru.practicum.dto.ParticipationRequestDto;
 import ru.practicum.service.ParticipationRequestService;
 
@@ -11,7 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
-public class PrivateEventRequestController {
+public class EventRequestController {
 
     private final ParticipationRequestService requestService;
 
@@ -27,6 +29,6 @@ public class PrivateEventRequestController {
     public EventRequestStatusUpdateResult updateRequestStatus(@PathVariable Long userId,
                                                               @PathVariable Long eventId,
                                                               @Valid @RequestBody EventRequestStatusUpdateRequest updateRequest) {
-        return eventService.updateRequestStatus(userId, eventId, updateRequest);
+        return requestService.updateRequestStatus(userId, eventId, updateRequest);
     }
 }

@@ -1,4 +1,4 @@
-package ru.practicum.repository.event;
+package ru.practicum.repository;
 
 import org.springframework.data.domain.Pageable;
 import ru.practicum.dto.event.EventSearchFilterAdmin;

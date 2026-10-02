@@ -1,4 +1,4 @@
-package model;
+package ru.practicum.model;
 
 public interface ReactionProjection {
     Long getEventId();

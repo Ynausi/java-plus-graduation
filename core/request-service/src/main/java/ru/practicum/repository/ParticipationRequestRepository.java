@@ -1,7 +1,7 @@
-package repository;
+package ru.practicum.repository;
 
-import model.ParticipationRequest;
-import model.RequestStatus;
+import ru.practicum.model.ParticipationRequest;
+import ru.practicum.model.RequestStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

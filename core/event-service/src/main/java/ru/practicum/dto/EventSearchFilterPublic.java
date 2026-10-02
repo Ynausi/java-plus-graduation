@@ -1,4 +1,6 @@
-package ru.practicum.dto.event;
+package ru.practicum.dto;
+
+import ru.practicum.dto.PublicEventSort;
 
 import java.time.LocalDateTime;
 import java.util.List;

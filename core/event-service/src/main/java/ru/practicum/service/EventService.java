@@ -1,25 +1,20 @@
-package ru.practicum.service.event;
+package ru.practicum.service;
 
 import jakarta.servlet.http.HttpServletRequest;
-import ru.practicum.dto.event.*;
-import ru.practicum.dto.requests.EventRequestStatusUpdateRequest;
-import ru.practicum.dto.requests.EventRequestStatusUpdateResult;
-import ru.practicum.dto.requests.ParticipationRequestDto;
+import ru.practicum.dto.*;
 
 import java.util.List;
 
 public interface EventService {
     List<EventShortDto> getEventsByUser(Long userId, Integer from, Integer size);
 
-    List<ParticipationRequestDto> getRequestsByEvent(Long userId, Long eventId);
-
     EventFullDto createEvent(Long userId, NewEventDto newEventDto);
 
     EventFullDto getEventById(Long userId, Long eventId);
 
-    EventFullDto updateEvent(Long userId, Long eventId, UpdateEventUserRequest updateEventUserRequest);
+    EventForRequestDto getEventById(Long eventId);
 
-    EventRequestStatusUpdateResult updateRequestStatus(Long userId, Long eventId, EventRequestStatusUpdateRequest updateRequest);
+    EventFullDto updateEvent(Long userId, Long eventId, UpdateEventUserRequest updateEventUserRequest);
 
     List<EventFullDto> getEventsByAdmin(EventSearchFilterAdmin filter,
                                         Integer from,

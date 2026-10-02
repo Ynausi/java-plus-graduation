@@ -1,8 +1,8 @@
-package ru.practicum.service.event;
+package ru.practicum.service;
 
-import ru.practicum.dto.event.EventReactionDto;
-import ru.practicum.dto.users.UserRatingStatsDto;
-import ru.practicum.dto.users.UserShortDto;
+import ru.practicum.dto.EventReactionDto;
+import ru.practicum.dto.UserRatingStatsDto;
+import ru.practicum.dto.UserShortDto;
 import ru.practicum.model.ReactionType;
 
 import java.util.List;

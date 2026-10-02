@@ -1,4 +1,4 @@
-package model;
+package ru.practicum.model;
 
 import jakarta.persistence.Embeddable;
 import lombok.Getter;

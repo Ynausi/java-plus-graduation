@@ -6,7 +6,7 @@ stats-server:
 
 spring:
   application:
-    name: main-service
+    name: main-ru.practicum.service
 
   datasource:
     driver-class-name: org.postgresql.Driver

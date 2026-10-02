@@ -3,10 +3,10 @@ package ru.practicum.mapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
-import ru.practicum.dto.requests.ParticipationRequestDto;
-import ru.practicum.model.Event;
+import ru.practicum.dto.EventForRequestDto;
+import ru.practicum.dto.ParticipationRequestDto;
+import ru.practicum.dto.UserDto;
 import ru.practicum.model.ParticipationRequest;
-import ru.practicum.model.User;
 
 @Mapper(componentModel = "spring")
 public interface ParticipationRequestMapper {
@@ -23,17 +23,17 @@ public interface ParticipationRequestMapper {
     ParticipationRequestDto toDto(ParticipationRequest request);
 
     @Named("mapToUser")
-    default User mapToUser(Long userId) {
+    default UserDto mapToUser(Long userId) {
         if (userId == null) return null;
-        User user = new User();
+        UserDto user = new UserDto();
         user.setId(userId);
         return user;
     }
 
     @Named("mapToEvent")
-    default Event mapToEvent(Long eventId) {
+    default EventForRequestDto mapToEvent(Long eventId) {
         if (eventId == null) return null;
-        Event event = new Event();
+        EventForRequestDto event = new EventForRequestDto();
         event.setId(eventId);
         return event;
     }

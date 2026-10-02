@@ -1,7 +1,7 @@
 package ru.practicum.exceptions;
 
-public class UserNotFoundException extends RuntimeException {
-    public UserNotFoundException(String message) {
+public class RequestNotFoundException extends RuntimeException {
+    public RequestNotFoundException(String message) {
         super(message);
     }
 }

@@ -1,4 +1,4 @@
-package ru.practicum.repository.event;
+package ru.practicum.repository;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;

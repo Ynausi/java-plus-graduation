@@ -49,7 +49,7 @@ services:
 
   ewm-service:
     build: ./core/main-service
-    container_name: ewm-service
+    container_name: ewm-ru.practicum.service
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/main
       SPRING_DATASOURCE_USERNAME: main
@@ -98,3 +98,12 @@ services:
       config-server:
         condition: service_started
     restart: on-failure
+
+  users-db:
+    image: postgres:16.1
+    ports:
+      - "6644:5432"
+    environment:
+      POSTRES_DB: users
+      POSTGRES_USER: users
+      POSTGRES_PASSWORD: users
