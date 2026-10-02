@@ -12,29 +12,14 @@ import ru.practicum.model.ParticipationRequest;
 public interface ParticipationRequestMapper {
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "requester", source = "requesterId", qualifiedByName = "mapToUser")
-    @Mapping(target = "event", source = "eventId", qualifiedByName = "mapToEvent")
+    @Mapping(target = "requesterId", source = "requesterId")
+    @Mapping(target = "eventId", source = "eventId")
     @Mapping(target = "status", constant = "PENDING")
     @Mapping(target = "created", ignore = true)
     ParticipationRequest toEntity(Long requesterId, Long eventId);
 
-    @Mapping(target = "requester", source = "requester.id")
-    @Mapping(target = "event", source = "event.id")
+    @Mapping(target = "requester", source = "requesterId")
+    @Mapping(target = "event", source = "eventId")
     ParticipationRequestDto toDto(ParticipationRequest request);
 
-    @Named("mapToUser")
-    default UserDto mapToUser(Long userId) {
-        if (userId == null) return null;
-        UserDto user = new UserDto();
-        user.setId(userId);
-        return user;
-    }
-
-    @Named("mapToEvent")
-    default EventForRequestDto mapToEvent(Long eventId) {
-        if (eventId == null) return null;
-        EventForRequestDto event = new EventForRequestDto();
-        event.setId(eventId);
-        return event;
-    }
 }

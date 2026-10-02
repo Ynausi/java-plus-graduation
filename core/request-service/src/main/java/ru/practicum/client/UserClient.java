@@ -10,5 +10,4 @@ public interface UserClient {
 
     @GetMapping("/internal/users/{userId}")
     UserDto getUser(@PathVariable Long userId);
-
 }

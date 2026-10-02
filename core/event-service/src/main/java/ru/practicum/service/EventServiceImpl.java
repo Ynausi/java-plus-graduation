@@ -9,6 +9,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.StatsClient;
+import ru.practicum.client.UserClient;
 import ru.practicum.dto.*;
 import ru.practicum.exceptions.BadRequestException;
 import ru.practicum.exceptions.ConflictException;
@@ -40,6 +41,7 @@ public class EventServiceImpl implements EventService {
     private final StatsClient statsClient;
     private final EventMapper eventMapper;
     private final EventRepository eventRepository;
+    private final UserClient userClient;
 
     private static final DateTimeFormatter FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
@@ -48,7 +50,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventShortDto> getEventsByUser(Long userId, Integer from, Integer size) {
-        getUserByIdOrThrow(userId);
+        userClient.getUser(userId);
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
 
@@ -60,7 +62,7 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional
     public EventFullDto createEvent(Long userId, NewEventDto newEventDto) {
-        User initiator = getUserByIdOrThrow(userId);
+        UserDto initiator = userClient.getUser(userId);
 
         if (newEventDto.getEventDate().isBefore(LocalDateTime.now().plusHours(MIN_HOURS_BEFORE_EVENT))) {
             throw new BadRequestException(
@@ -71,7 +73,7 @@ public class EventServiceImpl implements EventService {
         Category category = getCategoryByIdOrThrow(newEventDto.getCategory());
         Event newEvent = eventMapper.toEvent(newEventDto);
 
-        newEvent.setInitiator(initiator);
+        newEvent.setInitiator(initiator.getId());
         newEvent.setCategory(category);
 
         if (newEvent.getPaid() == null) newEvent.setPaid(false);
@@ -90,7 +92,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventFullDto getEventById(Long userId, Long eventId) {
-        getUserByIdOrThrow(userId);
+        userClient.getUser(userId);
         Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("Событие с id - " + eventId + " не найдено"));
 
@@ -107,13 +109,14 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventForRequestDto getEventById(Long eventId) {
-        return null;
+        return eventRepository.findById(eventId).orElseThrow(() ->
+                new NotFoundException("No event with id:",eventId));
     }
 
     @Override
     @Transactional
     public EventFullDto updateEvent(Long userId, Long eventId, UpdateEventUserRequest updateEventUserRequest) {
-        getUserByIdOrThrow(userId);
+        userClient.getUser(userId);
         Event event = getEventByIdOrThrow(eventId);
 
         if (!event.getInitiator().equals(userId)) {
@@ -279,7 +282,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventFullDto> getFavoriteEvents(Long userId) {
-        getUserByIdOrThrow(userId);
+        userClient.getUser(userId);
 
         List<Event> favoriteEvents = eventRepository.findFavoriteEvents(userId);
 
