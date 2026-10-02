@@ -10,10 +10,10 @@ import java.util.List;
 
 public interface ParticipationRequestRepository extends JpaRepository<ParticipationRequest, Long> {
 
-    @Query("SELECT pr.event.id, COUNT(pr.id) " +
+    @Query("SELECT pr.eventId, COUNT(pr.id) " +
             "FROM ParticipationRequest pr " +
-            "WHERE pr.event.id IN :eventIds AND pr.status = :status " +
-            "GROUP BY pr.event.id")
+            "WHERE pr.eventId IN :eventIds AND pr.status = :status " +
+            "GROUP BY pr.eventId")
     List<Object[]> countByEventIdsAndStatus(@Param("eventIds") List<Long> eventIds,
                                             @Param("status") RequestStatus status);
 

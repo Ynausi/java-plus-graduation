@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 public class EventForRequestDto {
     private Long id;
     private Long initiatorId;
-    private String state;
+    private EventState state;
     private Integer participantLimit;
     private Boolean requestModeration;
 }

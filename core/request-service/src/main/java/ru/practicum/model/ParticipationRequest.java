@@ -25,10 +25,10 @@ public class ParticipationRequest {
     private Long id;
 
     @Column(name = "requester_id",nullable = false)
-    private Long requester;
+    private Long requesterId;
 
     @Column(name = "event_id",nullable = false)
-    private Long event;
+    private Long eventId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

@@ -5,16 +5,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.client.UserClient;
 import ru.practicum.client.EventClient;
-import ru.practicum.dto.EventForRequestDto;
-import ru.practicum.dto.ParticipationRequestDto;
-import ru.practicum.dto.UserDto;
+import ru.practicum.dto.*;
+import ru.practicum.exceptions.BadRequestException;
 import ru.practicum.exceptions.ConflictException;
 import ru.practicum.exceptions.RequestNotFoundException;
 import ru.practicum.mapper.ParticipationRequestMapper;
 import ru.practicum.model.ParticipationRequest;
 import ru.practicum.model.RequestStatus;
 import ru.practicum.repository.ParticipationRequestRepository;
-import ru.practicum.dto.EventRequestStatusUpdateResult;
 import ru.practicum.dto.ParticipationRequestDto;
 
 
@@ -58,7 +56,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         ParticipationRequest request = requestRepository.findById(requestId).orElseThrow(() ->
                 new RequestNotFoundException(String.format("Request with id=%s was not found", requestId)));
 
-        if (!Objects.equals(request.getRequester(), userId)) {
+        if (!Objects.equals(request.getRequesterId(), userId)) {
             throw new ConflictException(
                     "Only the requester can cancel the request"
             );
@@ -78,19 +76,19 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
                 .toList();
     }
 
-    private void validateRequest(Event event, Long userId) {
+    private void validateRequest(EventForRequestDto event, Long userId) {
         Integer eventParticipationLimit = event.getParticipantLimit();
         Long currentConfirmedRequests =
                 requestRepository.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED);
 
-        if (Objects.equals(userId, event.getInitiator().getId())) {
+        if (Objects.equals(userId, event.getInitiatorId())) {
             throw new ConflictException(
                     "Event initiator cannot request participation in their own event"
             );
         }
-        if (!EventState.PUBLISHED.equals(event.getEventState())) {
+        if (!EventState.PUBLISHED.equals(event.getState())) {
             throw new ConflictException(
-                    "Cannot participate in unpublished event. Current status: " + event.getEventState()
+                    "Cannot participate in unpublished event. Current status: " + event.getState()
             );
         }
         if (eventParticipationLimit > 0 && currentConfirmedRequests >= eventParticipationLimit) {
@@ -104,13 +102,13 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
     @Override
     public List<ParticipationRequestDto> getRequestsByEvent(Long userId, Long eventId) {
-        getUserByIdOrThrow(userId);
-        Event event = getEventByIdOrThrow(eventId);
+        userClient.getUser(userId);
+        EventForRequestDto event = eventClient.getEvent(eventId);
 
-        if (!event.getInitiator().getId().equals(userId))
-            throw new NotFoundException("Пользователь не является инициатором этого события");
+        if (!event.getInitiatorId().equals(userId))
+            throw new RequestNotFoundException("Пользователь не является инициатором этого события");
         return requestRepository.findAllByEventId(eventId).stream()
-                .map(requestMapper::toDto)
+                .map(mapper::toDto)
                 .toList();
     }
 
@@ -119,10 +117,10 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     public EventRequestStatusUpdateResult updateRequestStatus(Long userId,
                                                               Long eventId,
                                                               EventRequestStatusUpdateRequest updateRequest) {
-        getUserByIdOrThrow(userId);
-        Event event = getEventByIdOrThrow(eventId);
+        userClient.getUser(userId);
+        EventForRequestDto event = eventClient.getEvent(eventId);
 
-        if (!event.getInitiator().getId().equals(userId)) {
+        if (!event.getInitiatorId().equals(userId)) {
             throw new ConflictException("Пользователь не является инициатором этого события");
         }
 
@@ -134,7 +132,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         List<ParticipationRequest> requests = requestRepository.findAllById(updateRequest.getRequestIds());
 
         for (ParticipationRequest request : requests) {
-            if (!request.getEvent().getId().equals(eventId)) {
+            if (!request.getEventId().equals(eventId)) {
                 throw new BadRequestException("Запрос не относится к данному событию");
             }
             if (!request.getStatus().equals(RequestStatus.PENDING)) {
@@ -166,7 +164,8 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
         requestRepository.saveAll(requests);
         return EventRequestStatusUpdateResult.builder()
-                .confirmedRequests(confirmedRequests.stream().map(requestMapper::toDto).toList())
-                .rejectedRequests(rejectedRequests.stream().map(requestMapper::toDto).toList())
+                .confirmedRequests(confirmedRequests.stream().map(mapper::toDto).toList())
+                .rejectedRequests(rejectedRequests.stream().map(mapper::toDto).toList()).build();
 
     }
+}
