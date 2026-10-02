@@ -1,6 +1,6 @@
 spring:
   application:
-    name: main-ru.practicum.service
+    name: main-service
   config:
     import: configserver:http://localhost:8888
 

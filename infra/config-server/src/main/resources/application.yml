@@ -12,10 +12,11 @@ spring:
         native:
           search-locations:
             - file:./infra/config-repo
-            - file:./infra/config-repo/main-ru.practicum.service
+            - file:./infra/config-repo/main-service
             - file:./infra/config-repo/stat-server
             - file:./infra/config-repo/gateway-server
-            - file:./infra/config-repo/core/user-ru.practicum.service
+            - file:./infra/config-repo/core/user-service
+            - file:./infra/config-repo/core/request-service
 
 eureka:
   client:
