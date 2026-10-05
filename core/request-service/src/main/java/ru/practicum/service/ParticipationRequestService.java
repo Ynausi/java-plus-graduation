@@ -22,4 +22,6 @@ public interface ParticipationRequestService {
     Long getConfirmedCount(Long eventId);
 
     Map<Long, Long> getConfirmedCounts(List<Long> eventIds);
+
+    boolean isConfirmedParticipant(Long userId, Long eventId);
 }

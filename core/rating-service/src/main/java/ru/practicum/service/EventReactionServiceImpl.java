@@ -14,14 +14,18 @@ import ru.practicum.dto.UserShortDto;
 import ru.practicum.exceptions.BadRequestException;
 import ru.practicum.exceptions.ConflictException;
 import ru.practicum.exceptions.NotFoundException;
+import ru.practicum.mapper.ReactionMapper;
 import ru.practicum.model.EventReaction;
+import ru.practicum.model.ReactionProjection;
 import ru.practicum.model.ReactionType;
 import ru.practicum.repository.EventReactionRepository;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,12 +36,13 @@ public class EventReactionServiceImpl implements EventReactionService {
     private final UserClient userClient;
     private final RequestClient requestClient;
     private final EventClient eventClient;
+    private final ReactionMapper reactionMapper;
 
     @Override
     public List<UserShortDto> getUsersByReaction(List<Long> eventIds, ReactionType reactionType, Integer from, Integer size) {
         Pageable pageable = PageRequest.of(from / size, size);
 
-        List<User> reactors = reactionRepository.findReactorsByEventIdAndReactionType(eventIds, reactionType, pageable);
+        List<Long> reactors = reactionRepository.findReactorIdsByEventIdsAndReactionType(eventIds, reactionType, pageable);
 
         return reactors
                 .stream()
@@ -75,12 +80,28 @@ public class EventReactionServiceImpl implements EventReactionService {
             reaction.setUpdatedAt(LocalDateTime.now());
 
         } else {
-            EventReaction newReaction = eventMapper.toReaction(userId, eventId, reactionType);
+            EventReaction newReaction = reactionMapper.toEntity(userId, eventId, reactionType);
             reaction = reactionRepository.save(newReaction);
         }
 
 
-        return eventMapper.toReactionDto(reaction);
+        return reactionMapper.toDto(reaction);
+    }
+
+    @Override
+    public Map<Long, Integer> getRatings(List<Long> eventIds) {
+        if (eventIds == null || eventIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        return reactionRepository.findEventReactionsByEventIds(eventIds)
+                .stream()
+                .collect(Collectors.groupingBy(
+                        ReactionProjection::getEventId,
+                        Collectors.summingInt(
+                                p -> p.getReaction().getWeight()
+                        )
+                ));
     }
 
     @Override
@@ -99,9 +120,7 @@ public class EventReactionServiceImpl implements EventReactionService {
     }
 
     private void validateUserParticipant(Long userId, Long eventId) {
-        boolean isParticipant = requestRepository.existsByRequesterIdAndEventIdAndStatus(
-                userId, eventId, RequestStatus.CONFIRMED
-        );
+        boolean isParticipant = requestClient.isConfirmedParticipant(userId,eventId);
 
         if (!isParticipant) {
             throw new BadRequestException("Only participants can react to events");

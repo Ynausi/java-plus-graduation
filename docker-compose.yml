@@ -122,7 +122,7 @@ services:
       POSTGRES_USER: requests
       POSTGRES_PASSWORD: requests
     healthcheck:
-      test: pg_isready -q -d stats -U stats
+      test: pg_isready -q -d requests -U requests
       timeout: 5s
       interval: 5s
       retries: 10
@@ -136,7 +136,7 @@ services:
       POSTGRES_USER: events
       POSTGRES_PASSWORD: events
     healthcheck:
-      test: pg_isready -q -d stats -U stats
+      test: pg_isready -q -d events -U events
       timeout: 5s
       interval: 5s
       retries: 10
@@ -150,7 +150,7 @@ services:
       POSTGRES_USER: ratings
       POSTGRES_PASSWORD: ratings
     healthcheck:
-      test: pg_isready -q -d stats -U stats
+      test: pg_isready -q -d ratings -U ratings
       timeout: 5s
       interval: 5s
       retries: 10

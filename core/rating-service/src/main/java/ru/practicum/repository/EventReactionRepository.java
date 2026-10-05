@@ -8,7 +8,6 @@ import ru.practicum.dto.UserRatingStatsDto;
 import ru.practicum.model.EventReaction;
 import ru.practicum.model.ReactionProjection;
 import ru.practicum.model.ReactionType;
-import ru.practicum.model.User;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,10 +26,17 @@ public interface EventReactionRepository extends JpaRepository<EventReaction, Lo
             @Param("eventIds") List<Long> eventIds
     );
 
-    @Query("SELECT r.reactor FROM EventReaction r WHERE r.event.id IN :eventIds AND r.reactionType = :reactionType")
-    List<User> findReactorsByEventIdAndReactionType(@Param("eventIds") List<Long> eventIds,
-                                                    @Param("reactionType") ReactionType reactionType,
-                                                    Pageable pageable);
+    @Query("""
+    SELECT r.reactorId
+    FROM EventReaction r
+    WHERE r.eventId IN :eventIds
+      AND r.reactionType = :reactionType
+    """)
+    List<Long> findReactorIdsByEventIdsAndReactionType(
+            @Param("eventIds") List<Long> eventIds,
+            @Param("reactionType") ReactionType reactionType,
+            Pageable pageable
+    );
 
     @Query("SELECT new ru.practicum.ru.practicum.dto.users.UserRatingStatsDto(" +
             "r.event.initiator.id, " +

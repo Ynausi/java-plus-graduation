@@ -51,6 +51,15 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     }
 
     @Override
+    public boolean isConfirmedParticipant(Long userId, Long eventId) {
+        return requestRepository.existsByRequesterIdAndEventIdAndStatus(
+                userId,
+                eventId,
+                RequestStatus.CONFIRMED
+        );
+    }
+
+    @Override
     @Transactional
     public ParticipationRequestDto cancelParticipationRequest(Long userId, Long requestId) {
         userClient.getUser(userId);

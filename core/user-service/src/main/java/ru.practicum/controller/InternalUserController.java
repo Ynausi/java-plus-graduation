@@ -1,12 +1,11 @@
 package ru.practicum.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.UserDto;
 import ru.practicum.service.UserService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/internal/users")
@@ -18,5 +17,10 @@ public class InternalUserController {
     @GetMapping("/{userId}")
     public UserDto getUser(@PathVariable Long userId) {
         return userService.getUser(userId);
+    }
+
+    @GetMapping
+    public List<UserDto> getUsers(@RequestParam List<Long> ids) {
+        return userService.getUsers(ids, 0, ids.size());
     }
 }

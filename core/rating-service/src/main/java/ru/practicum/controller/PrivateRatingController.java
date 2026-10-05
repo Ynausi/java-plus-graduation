@@ -3,11 +3,9 @@ package ru.practicum.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.dto.EventFullDto;
 import ru.practicum.dto.EventReactionDto;
 import ru.practicum.model.ReactionType;
 import ru.practicum.service.EventReactionService;
-import ru.practicum.service.EventService;
 
 import java.util.List;
 
@@ -17,7 +15,6 @@ import java.util.List;
 public class PrivateRatingController {
 
     private final EventReactionService eventReactionService;
-    private final EventService eventService;
 
     @PostMapping("/{eventId}/{reaction}")
     @ResponseStatus(HttpStatus.CREATED)

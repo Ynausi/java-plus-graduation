@@ -25,4 +25,12 @@ public class InternalRequestController {
 
         return requestService.getConfirmedCounts(eventIds);
     }
+
+    @GetMapping("/users/{userId}/events/{eventId}/confirmed")
+    public boolean isConfirmedParticipant(
+            @PathVariable Long userId,
+            @PathVariable Long eventId) {
+
+        return requestService.isConfirmedParticipant(userId, eventId);
+    }
 }
