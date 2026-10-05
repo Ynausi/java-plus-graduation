@@ -18,7 +18,9 @@ import ru.practicum.dto.ParticipationRequestDto;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -167,5 +169,28 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
                 .confirmedRequests(confirmedRequests.stream().map(mapper::toDto).toList())
                 .rejectedRequests(rejectedRequests.stream().map(mapper::toDto).toList()).build();
 
+    }
+
+    @Override
+    public Long getConfirmedCount(Long eventId) {
+        return requestRepository.countByEventIdAndStatus(
+                eventId,
+                RequestStatus.CONFIRMED
+        );
+    }
+
+    @Override
+    public Map<Long, Long> getConfirmedCounts(List<Long> eventIds) {
+
+        return requestRepository
+                .countByEventIdsAndStatus(
+                        eventIds,
+                        RequestStatus.CONFIRMED
+                )
+                .stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> (Long) row[1]
+                ));
     }
 }

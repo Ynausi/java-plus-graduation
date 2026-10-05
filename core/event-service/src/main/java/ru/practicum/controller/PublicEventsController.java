@@ -9,7 +9,7 @@ import ru.practicum.dto.EventFullDto;
 import ru.practicum.dto.EventSearchFilterPublic;
 import ru.practicum.dto.EventShortDto;
 import ru.practicum.dto.PublicEventSort;
-import ru.practicum.service.EventService;
+import ru.practicum.service.event.EventService;
 
 import java.time.LocalDateTime;
 import java.util.List;

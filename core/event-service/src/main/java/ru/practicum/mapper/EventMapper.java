@@ -21,7 +21,7 @@ public interface EventMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "participationRequests", ignore = true)
-    @Mapping(target = "initiator", ignore = true)
+    @Mapping(target = "initiatorId", ignore = true)
     @Mapping(target = "eventState", ignore = true)
     @Mapping(target = "eventReactions", ignore = true)
     @Mapping(target = "createdOn", ignore = true)
@@ -45,17 +45,13 @@ public interface EventMapper {
     @Mapping(target = "updatedAt", ignore = true)
     EventReaction toReaction(Long userId, Long eventId, ReactionType reactionType);
 
-    @Mapping(target = "reactor", source = "reactor.id")
+    @Mapping(target = "reactorId", source = "reactor")
     @Mapping(target = "event", source = "event.id")
     EventReactionDto toReactionDto(EventReaction reaction);
 
-    @Named("mapToUser")
-    default User mapToUser(Long userId) {
-        if (userId == null) return null;
-        User user = new User();
-        user.setId(userId);
-        return user;
-    }
+    @Mapping(target = "initiatorId",source = "initiatorId")
+    @Mapping(target = "state",source = "eventState")
+    EventForRequestDto toEventForRequestDto(Event event);
 
     @Named("mapToEvent")
     default Event mapToEvent(Long eventId) {

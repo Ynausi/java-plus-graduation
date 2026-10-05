@@ -8,7 +8,7 @@ import ru.practicum.dto.EventFullDto;
 import ru.practicum.dto.EventSearchFilterAdmin;
 import ru.practicum.dto.UpdateEventAdminRequest;
 import ru.practicum.model.EventState;
-import ru.practicum.service.EventService;
+import ru.practicum.service.event.EventService;
 
 import java.time.LocalDateTime;
 import java.util.List;

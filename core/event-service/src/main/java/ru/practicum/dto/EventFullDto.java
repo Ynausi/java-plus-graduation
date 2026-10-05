@@ -1,8 +1,7 @@
 package ru.practicum.dto;
 
 import lombok.*;
-import ru.practicum.dto.CategoryResponse;
-import ru.practicum.dto.UserShortDto;
+import ru.practicum.dto.category.CategoryResponse;
 import ru.practicum.model.EventState;
 
 import java.time.LocalDateTime;

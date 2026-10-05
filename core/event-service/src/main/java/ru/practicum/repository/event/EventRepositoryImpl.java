@@ -1,4 +1,4 @@
-package ru.practicum.repository;
+package ru.practicum.repository.event;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
@@ -7,12 +7,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
-import ru.practicum.dto.event.EventSearchFilterAdmin;
-import ru.practicum.dto.event.EventSearchFilterPublic;
-import ru.practicum.dto.event.PublicEventSort;
+import ru.practicum.dto.EventSearchFilterAdmin;
+import ru.practicum.dto.EventSearchFilterPublic;
+import ru.practicum.dto.PublicEventSort;
 import ru.practicum.model.Event;
 import ru.practicum.model.EventState;
 import ru.practicum.model.QEvent;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +31,7 @@ public class EventRepositoryImpl implements EventQuerydslRepository {
         BooleanBuilder where = new BooleanBuilder();
 
         if (filter.users() != null && !filter.users().isEmpty()) {
-            where.and(qEvent.initiator.id.in(filter.users()));
+            where.and(qEvent.initiatorId.in(filter.users()));
         }
         if (filter.states() != null && !filter.states().isEmpty()) {
             where.and(qEvent.eventState.in(filter.states()));
@@ -72,7 +73,7 @@ public class EventRepositoryImpl implements EventQuerydslRepository {
         }
 
         if (filter.users() != null && !filter.users().isEmpty()) {
-            where.and(e.initiator.id.in(filter.users()));
+            where.and(e.initiatorId.in(filter.users()));
         }
 
         if (filter.paid() != null) {

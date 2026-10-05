@@ -1,8 +1,8 @@
-package ru.practicum.repository;
+package ru.practicum.repository.event;
 
 import org.springframework.data.domain.Pageable;
-import ru.practicum.dto.event.EventSearchFilterAdmin;
-import ru.practicum.dto.event.EventSearchFilterPublic;
+import ru.practicum.dto.EventSearchFilterAdmin;
+import ru.practicum.dto.EventSearchFilterPublic;
 import ru.practicum.model.Event;
 
 import java.util.List;

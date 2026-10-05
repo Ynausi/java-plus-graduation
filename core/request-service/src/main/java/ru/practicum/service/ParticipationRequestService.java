@@ -5,6 +5,7 @@ import ru.practicum.dto.EventRequestStatusUpdateResult;
 import ru.practicum.dto.ParticipationRequestDto;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ParticipationRequestService {
 
@@ -17,4 +18,8 @@ public interface ParticipationRequestService {
     List<ParticipationRequestDto> getRequestsByEvent(Long userId, Long eventId);
 
     EventRequestStatusUpdateResult updateRequestStatus(Long userId, Long eventId, EventRequestStatusUpdateRequest updateRequest);
+
+    Long getConfirmedCount(Long eventId);
+
+    Map<Long, Long> getConfirmedCounts(List<Long> eventIds);
 }

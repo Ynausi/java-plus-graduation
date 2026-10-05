@@ -1,4 +1,4 @@
-package ru.practicum.service;
+package ru.practicum.service.event;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -9,21 +9,23 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.StatsClient;
+import ru.practicum.client.RequestClient;
 import ru.practicum.client.UserClient;
 import ru.practicum.dto.*;
 import ru.practicum.exceptions.BadRequestException;
 import ru.practicum.exceptions.ConflictException;
 import ru.practicum.exceptions.NotFoundException;
 import ru.practicum.mapper.EventMapper;
+import ru.practicum.model.Category;
 import ru.practicum.model.Event;
 import ru.practicum.model.EventState;
 import ru.practicum.model.ReactionProjection;
 import ru.practicum.repository.EventReactionRepository;
-import ru.practicum.repository.EventRepository;
+import ru.practicum.repository.category.CategoryRepository;
+import ru.practicum.repository.event.EventRepository;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +44,8 @@ public class EventServiceImpl implements EventService {
     private final EventMapper eventMapper;
     private final EventRepository eventRepository;
     private final UserClient userClient;
+    private final RequestClient requestClient;
+    private final CategoryRepository categoryRepository;
 
     private static final DateTimeFormatter FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
@@ -73,7 +77,7 @@ public class EventServiceImpl implements EventService {
         Category category = getCategoryByIdOrThrow(newEventDto.getCategory());
         Event newEvent = eventMapper.toEvent(newEventDto);
 
-        newEvent.setInitiator(initiator.getId());
+        newEvent.setInitiatorId(initiator.getId());
         newEvent.setCategory(category);
 
         if (newEvent.getPaid() == null) newEvent.setPaid(false);
@@ -99,7 +103,7 @@ public class EventServiceImpl implements EventService {
         Map<Long, Long> viewsMap = getViewsMap(List.of(eventId));
         Map<Long, Integer> ratingsMap = getRatingsMap(List.of(eventId));
 
-        Long confirmedRequests = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
+        Long confirmedRequests = requestClient.getConfirmedCount(eventId);
         EventFullDto eventFullDto = eventMapper.toEventFullDto(event);
         eventFullDto.setViews(viewsMap.getOrDefault(eventId, 0L));
         eventFullDto.setConfirmedRequests(confirmedRequests);
@@ -109,8 +113,9 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventForRequestDto getEventById(Long eventId) {
-        return eventRepository.findById(eventId).orElseThrow(() ->
-                new NotFoundException("No event with id:",eventId));
+        Event event = eventRepository.findById(eventId).orElseThrow(() ->
+                new NotFoundException("No event with id:"+eventId));
+        return eventMapper.toEventForRequestDto(event);
     }
 
     @Override
@@ -119,7 +124,7 @@ public class EventServiceImpl implements EventService {
         userClient.getUser(userId);
         Event event = getEventByIdOrThrow(eventId);
 
-        if (!event.getInitiator().equals(userId)) {
+        if (!event.getInitiatorId().equals(userId)) {
             throw new ConflictException("Пользователь не является инициатором этого события");
         }
 
@@ -272,7 +277,7 @@ public class EventServiceImpl implements EventService {
                 LocalDateTime.now()));
 
         Map<Long, Long> viewsMap = getViewsMap(List.of(eventId));
-        Long confirmedRequests = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
+        Long confirmedRequests = requestClient.getConfirmedCount(eventId);
 
         EventFullDto dto = eventMapper.toEventFullDto(event);
         dto.setViews(viewsMap.getOrDefault(eventId, 0L));
@@ -337,16 +342,12 @@ public class EventServiceImpl implements EventService {
     }
 
     private Map<Long, Long> getConfirmedRequestsMap(List<Long> eventIds) {
-        if (eventIds == null || eventIds.isEmpty()) return Collections.emptyMap();
 
-        List<Object[]> result = requestRepository.countByEventIdsAndStatus(eventIds, RequestStatus.CONFIRMED);
+        if (eventIds == null || eventIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
 
-        return result.stream()
-                .collect(Collectors.toMap(
-                        objects -> (Long) objects[0],
-                        objects -> (Long) objects[1],
-                        (existing, replacement) -> existing
-                ));
+        return requestClient.getConfirmedCounts(eventIds);
     }
 
     private Map<Long, Integer> getRatingsMap(List<Long> eventIds) {
@@ -405,6 +406,13 @@ public class EventServiceImpl implements EventService {
         return eventRepository.findById(eventId)
                 .orElseThrow(
                         () -> new NotFoundException("Событие с id - " + eventId + " не найдено")
+                );
+    }
+
+    private Category getCategoryByIdOrThrow(Long categoryId) {
+        return categoryRepository.findById(categoryId)
+                .orElseThrow(
+                        () -> new NotFoundException("Категория с id - " + categoryId + " не найдена")
                 );
     }
 }

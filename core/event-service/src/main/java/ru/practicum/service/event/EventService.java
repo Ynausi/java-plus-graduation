@@ -1,4 +1,4 @@
-package ru.practicum.service;
+package ru.practicum.service.event;
 
 import jakarta.servlet.http.HttpServletRequest;
 import ru.practicum.dto.*;

@@ -8,6 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 @Entity
 @Table(name = "events")
@@ -30,10 +31,11 @@ public class Event {
     private String description;
 
     @Column(name = "user_id")
-    private Long initiator;
+    private Long initiatorId;
 
+    @ManyToOne(fetch = FetchType.LAZY)
     @Column(name = "category_id")
-    private Long category;
+    private Category category;
 
     @Column(name = "event_date", nullable = false)
     private LocalDateTime eventDate;

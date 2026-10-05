@@ -1,7 +1,7 @@
 package ru.practicum.dto;
 
 import lombok.*;
-import ru.practicum.dto.CategoryResponse;
+import ru.practicum.dto.category.CategoryResponse;
 
 import java.time.LocalDateTime;
 
