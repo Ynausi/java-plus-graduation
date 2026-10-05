@@ -7,7 +7,6 @@ import ru.practicum.dto.EventReactionDto;
 import ru.practicum.model.ReactionType;
 import ru.practicum.service.EventReactionService;
 
-import java.util.List;
 
 @RestController
 @RequestMapping("/v1/{userId}/ratings")
@@ -32,8 +31,8 @@ public class PrivateRatingController {
         eventReactionService.deleteReaction(userId, eventId, reaction);
     }
 
-    @GetMapping
+    /*@GetMapping
     public List<EventFullDto> getEventsUserLiked(@PathVariable Long userId) {
         return eventService.getFavoriteEvents(userId);
-    }
+    }*/
 }

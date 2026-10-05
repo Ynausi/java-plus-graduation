@@ -15,7 +15,7 @@ public class EventShortDto {
     private String title;
     private String annotation;
     private CategoryResponse category;
-    private Long initiator;
+    private UserShortDto initiator;
     private Long confirmedRequests;
     private Long views;
     private Boolean paid;

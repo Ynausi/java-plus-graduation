@@ -4,7 +4,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import ru.practicum.dto.UserRatingStatsDto;
 import ru.practicum.model.EventReaction;
 import ru.practicum.model.ReactionProjection;
 import ru.practicum.model.ReactionType;
@@ -22,15 +21,13 @@ public interface EventReactionRepository extends JpaRepository<EventReaction, Lo
     FROM EventReaction r
     WHERE r.eventId IN :eventIds
     """)
-    List<ReactionProjection> findEventReactionsByEventIds(
-            @Param("eventIds") List<Long> eventIds
-    );
+    List<ReactionProjection> findEventReactionsByEventIds(@Param("eventIds") List<Long> eventIds);
 
     @Query("""
-    SELECT r.reactorId
+    SELECT DISTINCT r.reactorId
     FROM EventReaction r
     WHERE r.eventId IN :eventIds
-      AND r.reactionType = :reactionType
+    AND r.reactionType = :reactionType
     """)
     List<Long> findReactorIdsByEventIdsAndReactionType(
             @Param("eventIds") List<Long> eventIds,
@@ -38,12 +35,4 @@ public interface EventReactionRepository extends JpaRepository<EventReaction, Lo
             Pageable pageable
     );
 
-    @Query("SELECT new ru.practicum.ru.practicum.dto.users.UserRatingStatsDto(" +
-            "r.event.initiator.id, " +
-            "SUM(CASE WHEN r.reactionType = 'LIKE' THEN 1 ELSE 0 END), " +
-            "SUM(CASE WHEN r.reactionType = 'DISLIKE' THEN 1 ELSE 0 END)) " +
-            "FROM EventReaction r " +
-            "WHERE r.event.initiator.id IN :userIds " +
-            "GROUP BY r.event.initiator.id")
-    List<UserRatingStatsDto> getStatsByUserIds(@Param("userIds") List<Long> userIds);
 }

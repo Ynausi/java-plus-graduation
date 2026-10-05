@@ -10,7 +10,7 @@ import ru.practicum.model.Location;
 @Mapper(componentModel = "spring")
 public interface EventMapper {
 
-    @Mapping(target = "eventDate", source = "eventDate")
+    @Mapping(target = "initiator", ignore = true)
     @Mapping(target = "confirmedRequests", ignore = true)
     @Mapping(target = "views", ignore = true)
     @Mapping(target = "rating", ignore = true)

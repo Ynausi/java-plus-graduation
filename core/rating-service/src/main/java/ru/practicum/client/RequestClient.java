@@ -7,5 +7,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 @FeignClient(name = "request-service")
 public interface RequestClient {
 
-    @GetMapping("/internal/requests/users/{userId}/events/{eventId}/confirmed") boolean isConfirmedParticipant(@PathVariable Long userId, @PathVariable Long eventId);
+    @GetMapping("/internal/requests/users/{userId}/events/{eventId}/confirmed")
+    boolean isConfirmedParticipant(@PathVariable Long userId, @PathVariable Long eventId);
 }

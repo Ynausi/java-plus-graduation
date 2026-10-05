@@ -9,7 +9,6 @@ import ru.practicum.client.EventClient;
 import ru.practicum.client.RequestClient;
 import ru.practicum.client.UserClient;
 import ru.practicum.dto.EventReactionDto;
-import ru.practicum.dto.UserRatingStatsDto;
 import ru.practicum.dto.UserShortDto;
 import ru.practicum.exceptions.BadRequestException;
 import ru.practicum.exceptions.ConflictException;
@@ -42,18 +41,15 @@ public class EventReactionServiceImpl implements EventReactionService {
     public List<UserShortDto> getUsersByReaction(List<Long> eventIds, ReactionType reactionType, Integer from, Integer size) {
         Pageable pageable = PageRequest.of(from / size, size);
 
-        List<Long> reactors = reactionRepository.findReactorIdsByEventIdsAndReactionType(eventIds, reactionType, pageable);
+        List<Long> reactorsIds = reactionRepository.findReactorIdsByEventIdsAndReactionType(eventIds, reactionType, pageable);
 
-        return reactors
+        return userClient.getUsers(reactorsIds)
                 .stream()
-                .map(userMapper::userToUserShortDto)
+                .map(user -> new UserShortDto(
+                        user.getId(),
+                        user.getName()
+                ))
                 .toList();
-    }
-
-    @Override
-    public List<UserRatingStatsDto> getUsersRatingStats(List<Long> userIds) {
-        if (userIds == null || userIds.isEmpty()) return Collections.emptyList();
-        return reactionRepository.getStatsByUserIds(userIds);
     }
 
     @Override
