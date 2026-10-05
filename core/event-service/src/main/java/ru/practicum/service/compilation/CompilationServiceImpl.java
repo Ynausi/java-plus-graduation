@@ -7,12 +7,12 @@ import ru.practicum.dto.compilation.CompilationRequest;
 import ru.practicum.dto.compilation.CompilationResponse;
 import ru.practicum.dto.compilation.GetCompilationListDto;
 import ru.practicum.dto.compilation.UpdateCompilationRequest;
-import ru.practicum.exception.AlreadyExistsException;
-import ru.practicum.exception.NotFoundException;
+import ru.practicum.exceptions.AlreadyExistsException;
+import ru.practicum.exceptions.NotFoundException;
 import ru.practicum.mapper.CompilationMapper;
 import ru.practicum.model.Compilation;
 import ru.practicum.model.Event;
-import ru.practicum.repository.CompilationRepository;
+import ru.practicum.repository.compilation.CompilationRepository;
 import ru.practicum.repository.event.EventRepository;
 
 import java.util.Collection;

@@ -9,6 +9,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.StatsClient;
+import ru.practicum.client.RatingClient;
 import ru.practicum.client.RequestClient;
 import ru.practicum.client.UserClient;
 import ru.practicum.dto.*;
@@ -36,12 +37,13 @@ import static ru.practicum.model.EventState.PUBLISHED;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class EventServiceImpl implements EventService {
-    
+
     private final StatsClient statsClient;
     private final EventMapper eventMapper;
     private final EventRepository eventRepository;
     private final UserClient userClient;
     private final RequestClient requestClient;
+    private final RatingClient ratingClient;
     private final CategoryRepository categoryRepository;
 
     private static final DateTimeFormatter FORMATTER =
@@ -98,7 +100,7 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new NotFoundException("Событие с id - " + eventId + " не найдено"));
 
         Map<Long, Long> viewsMap = getViewsMap(List.of(eventId));
-        Map<Long, Integer> ratingsMap = getRatingsMap(List.of(eventId));
+        Map<Long, Integer> ratingsMap = ratingClient.getRatings(List.of(eventId));
 
         Long confirmedRequests = requestClient.getConfirmedCount(eventId);
         EventFullDto eventFullDto = eventMapper.toEventFullDto(event);
@@ -282,28 +284,6 @@ public class EventServiceImpl implements EventService {
         return dto;
     }
 
-    @Override
-    public List<EventFullDto> getFavoriteEvents(Long userId) {
-        userClient.getUser(userId);
-
-        List<Event> favoriteEvents = eventRepository.findFavoriteEvents(userId);
-
-        return enrichFullDtos(favoriteEvents);
-    }
-
-    @Override
-    public List<EventShortDto> getTopEventsByRating(Integer limit, String order) {
-        List<Event> events;
-
-        if (order != null && order.equalsIgnoreCase("ASC")) {
-            events = eventRepository.findTopEventsByRatingAsc(limit);
-        } else {
-            events = eventRepository.findTopEventsByRatingDesc(limit);
-        }
-
-        return enrichShortDtos(events);
-    }
-
     private Map<Long, Long> getViewsMap(List<Long> eventIds) {
         if (eventIds == null || eventIds.isEmpty()) return Collections.emptyMap();
 
@@ -347,17 +327,6 @@ public class EventServiceImpl implements EventService {
         return requestClient.getConfirmedCounts(eventIds);
     }
 
-    private Map<Long, Integer> getRatingsMap(List<Long> eventIds) {
-        if (eventIds == null || eventIds.isEmpty()) return Collections.emptyMap();
-
-        List<ReactionProjection> eventReactions = eventReactionRepository.findEventReactionsByEventIds(eventIds);
-
-        return eventReactions.stream()
-                .collect(Collectors.groupingBy(
-                        ReactionProjection::getEventId,
-                        Collectors.summingInt(projection -> projection.getReaction().getWeight())
-                ));
-    }
 
     private List<EventFullDto> enrichFullDtos(List<Event> events) {
         if (events.isEmpty()) return Collections.emptyList();
@@ -366,7 +335,7 @@ public class EventServiceImpl implements EventService {
 
         Map<Long, Long> viewsMap = getViewsMap(eventIds);
         Map<Long, Long> confirmedRequestsMap = getConfirmedRequestsMap(eventIds);
-        Map<Long, Integer> ratingsMap = getRatingsMap(eventIds);
+        Map<Long, Integer> ratingsMap = ratingClient.getRatings(eventIds);
 
         return events.stream()
                 .map(event -> {
@@ -386,7 +355,7 @@ public class EventServiceImpl implements EventService {
 
         Map<Long, Long> viewsMap = getViewsMap(eventIds);
         Map<Long, Long> confirmedRequestsMap = getConfirmedRequestsMap(eventIds);
-        Map<Long, Integer> ratingsMap = getRatingsMap(eventIds);
+        Map<Long, Integer> ratingsMap = ratingClient.getRatings(eventIds);
 
         return events.stream()
                 .map(event -> {

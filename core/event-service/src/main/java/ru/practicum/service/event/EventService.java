@@ -28,8 +28,4 @@ public interface EventService {
                                         HttpServletRequest request);
 
     EventFullDto getPublicEventById(Long eventId, HttpServletRequest request);
-
-    List<EventFullDto> getFavoriteEvents(Long userId);
-
-    List<EventShortDto> getTopEventsByRating(Integer limit, String order);
 }

@@ -20,7 +20,6 @@ public interface EventMapper {
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "initiatorId", ignore = true)
     @Mapping(target = "eventState", ignore = true)
-    @Mapping(target = "eventReactions", ignore = true)
     @Mapping(target = "createdOn", ignore = true)
     @Mapping(target = "publishedOn", ignore = true)
     Event toEvent(NewEventDto newEventDto);

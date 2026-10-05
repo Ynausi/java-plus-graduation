@@ -5,20 +5,18 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.dto.event.EventReactionDto;
-import ru.practicum.dto.users.UserRatingStatsDto;
-import ru.practicum.dto.users.UserShortDto;
-import ru.practicum.exception.BadRequestException;
-import ru.practicum.exception.ConflictException;
-import ru.practicum.exception.NotFoundException;
-import ru.practicum.mapper.EventMapper;
-import ru.practicum.mapper.UserMapper;
+import ru.practicum.client.EventClient;
+import ru.practicum.client.RequestClient;
+import ru.practicum.client.UserClient;
+import ru.practicum.dto.EventReactionDto;
+import ru.practicum.dto.UserRatingStatsDto;
+import ru.practicum.dto.UserShortDto;
+import ru.practicum.exceptions.BadRequestException;
+import ru.practicum.exceptions.ConflictException;
+import ru.practicum.exceptions.NotFoundException;
 import ru.practicum.model.EventReaction;
 import ru.practicum.model.ReactionType;
 import ru.practicum.repository.EventReactionRepository;
-import ru.practicum.repository.ParticipationRequestRepository;
-import ru.practicum.repository.UsersRepository;
-import ru.practicum.repository.event.EventRepository;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -31,7 +29,9 @@ import java.util.Optional;
 public class EventReactionServiceImpl implements EventReactionService {
 
     private final EventReactionRepository reactionRepository;
-
+    private final UserClient userClient;
+    private final RequestClient requestClient;
+    private final EventClient eventClient;
 
     @Override
     public List<UserShortDto> getUsersByReaction(List<Long> eventIds, ReactionType reactionType, Integer from, Integer size) {
@@ -56,8 +56,8 @@ public class EventReactionServiceImpl implements EventReactionService {
     public EventReactionDto addReaction(Long userId,
                                               Long eventId,
                                               ReactionType reactionType) {
-        getUserByIdOrThrow(userId);
-        getEventByIdOrThrow(eventId);
+        userClient.getUser(userId);
+        eventClient.getEvent(eventId);
 
         Optional<EventReaction> existingReaction = reactionRepository.findByReactorIdAndEventId(userId, eventId);
 
@@ -86,8 +86,8 @@ public class EventReactionServiceImpl implements EventReactionService {
     @Override
     @Transactional
     public void deleteReaction(Long userId, Long eventId, ReactionType reactionType) {
-        getUserByIdOrThrow(userId);
-        getEventByIdOrThrow(eventId);
+        userClient.getUser(userId);
+        eventClient.getEvent(eventId);
 
         EventReaction reaction = reactionRepository.findByReactorIdAndEventId(userId, eventId)
                 .filter(r -> r.getReactionType().equals(reactionType))
@@ -108,17 +108,4 @@ public class EventReactionServiceImpl implements EventReactionService {
         }
     }
 
-    private User getUserByIdOrThrow(Long userId) {
-        return usersRepository.findById(userId)
-                .orElseThrow(
-                        () -> new NotFoundException("Пользователь c id - " + userId + " не найден или недоступен")
-                );
-    }
-
-    private Event getEventByIdOrThrow(Long eventId) {
-        return eventRepository.findById(eventId)
-                .orElseThrow(
-                        () -> new NotFoundException("Событие с id - " + eventId + " не найдено")
-                );
-    }
 }
