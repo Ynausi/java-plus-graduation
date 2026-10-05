@@ -34,7 +34,7 @@ public class Event {
     private Long initiatorId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @Column(name = "category_id")
+    @JoinColumn(name = "category_id")
     private Category category;
 
     @Column(name = "event_date", nullable = false)
@@ -58,9 +58,6 @@ public class Event {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private EventState eventState;
-
-    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
-    List<EventReaction> eventReactions = new ArrayList<>();
 
     @CreationTimestamp
     @Column(name = "created_on", nullable = false, updatable = false)

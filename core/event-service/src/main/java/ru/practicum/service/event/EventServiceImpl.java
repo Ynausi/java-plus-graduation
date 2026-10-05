@@ -19,8 +19,6 @@ import ru.practicum.mapper.EventMapper;
 import ru.practicum.model.Category;
 import ru.practicum.model.Event;
 import ru.practicum.model.EventState;
-import ru.practicum.model.ReactionProjection;
-import ru.practicum.repository.EventReactionRepository;
 import ru.practicum.repository.category.CategoryRepository;
 import ru.practicum.repository.event.EventRepository;
 
@@ -38,8 +36,7 @@ import static ru.practicum.model.EventState.PUBLISHED;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class EventServiceImpl implements EventService {
-
-    private final EventReactionRepository eventReactionRepository;
+    
     private final StatsClient statsClient;
     private final EventMapper eventMapper;
     private final EventRepository eventRepository;

@@ -5,9 +5,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import ru.practicum.dto.*;
 import ru.practicum.model.Event;
-import ru.practicum.model.EventReaction;
 import ru.practicum.model.Location;
-import ru.practicum.model.ReactionType;
 
 @Mapper(componentModel = "spring")
 public interface EventMapper {
@@ -20,7 +18,6 @@ public interface EventMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "category", ignore = true)
-    @Mapping(target = "participationRequests", ignore = true)
     @Mapping(target = "initiatorId", ignore = true)
     @Mapping(target = "eventState", ignore = true)
     @Mapping(target = "eventReactions", ignore = true)
@@ -37,17 +34,6 @@ public interface EventMapper {
     LocationDto toLocationDto(Location location);
 
     Location toLocation(LocationDto locationDto);
-
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "reactor", source = "userId", qualifiedByName = "mapToUser")
-    @Mapping(target = "event", source = "eventId", qualifiedByName = "mapToEvent")
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    EventReaction toReaction(Long userId, Long eventId, ReactionType reactionType);
-
-    @Mapping(target = "reactorId", source = "reactor")
-    @Mapping(target = "event", source = "event.id")
-    EventReactionDto toReactionDto(EventReaction reaction);
 
     @Mapping(target = "initiatorId",source = "initiatorId")
     @Mapping(target = "state",source = "eventState")

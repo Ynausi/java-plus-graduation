@@ -1,8 +1,5 @@
 package ru.practicum.dto;
 
-import lombok.*;
-import ru.practicum.model.ReactionType;
-
 import java.time.LocalDateTime;
 
 @Getter
