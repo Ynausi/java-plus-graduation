@@ -1,7 +1,6 @@
 package ru.practicum.service;
 
-import ru.practicum.dto.EventReactionDto;
-import ru.practicum.dto.UserShortDto;
+import ru.practicum.dto.*;
 import ru.practicum.model.ReactionType;
 
 import java.util.List;
@@ -16,4 +15,10 @@ public interface EventReactionService {
     List<UserShortDto> getUsersByReaction(List<Long> eventIds, ReactionType reactionType, Integer from, Integer size);
 
     Map<Long, Integer> getRatings(List<Long> eventIds);
+
+    List<EventFullDto> getFavoriteEvents(Long userId);
+
+    List<EventShortDto> getTopEventsByRating(Integer limit, String order);
+
+    List<UserRatingStatsDto> getUsersRatingStats(List<Long> userIds);
 }

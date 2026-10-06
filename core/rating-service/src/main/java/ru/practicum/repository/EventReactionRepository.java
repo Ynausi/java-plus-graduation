@@ -4,6 +4,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import ru.practicum.model.EventRatingProjection;
 import ru.practicum.model.EventReaction;
 import ru.practicum.model.ReactionProjection;
 import ru.practicum.model.ReactionType;
@@ -35,4 +36,28 @@ public interface EventReactionRepository extends JpaRepository<EventReaction, Lo
             Pageable pageable
     );
 
+    @Query("""
+    SELECT r.eventId
+    FROM EventReaction r
+    WHERE r.reactorId = :userId
+      AND r.reactionType = :reactionType
+    """)
+    List<Long> findEventIdsByReactorIdAndReactionType(
+            @Param("userId") Long userId,
+            @Param("reactionType") ReactionType reactionType
+    );
+
+    @Query("""
+    SELECT r.eventId AS eventId,
+           SUM(
+               CASE
+                   WHEN r.reactionType = ru.practicum.model.ReactionType.LIKE THEN 1
+                   WHEN r.reactionType = ru.practicum.model.ReactionType.DISLIKE THEN -1
+                   ELSE 0
+               END
+           ) AS rating
+    FROM EventReaction r
+    GROUP BY r.eventId
+    """)
+    List<EventRatingProjection> findAllEventRatings();
 }

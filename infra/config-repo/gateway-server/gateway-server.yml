@@ -27,25 +27,23 @@ spring:
             max-age: 3600
 
       routes:
-        - id: main-ru.practicum.service
-          uri: lb://main-ru.practicum.service
-          predicates:
-            - Path=/categories/**,/admin/categories/**,/admin/compilations/**,/compilations/**,/admin/events/**,/users/**,/events/**,/v1/admin/ratings/**,/v1/{userId}/ratings/**,/v1/ratings/**,/users/{userId}/**
-          filters:
-            - name: Retry
-              args:
-                retries: 2
-                statuses:
-                  - BAD_GATEWAY
-                  - SERVICE_UNAVAILABLE
-                  - GATEWAY_TIMEOUT
-                methods:
-                  - GET
-                backoff:
-                  firstBackoff: 100ms
-                  maxBackoff: 500ms
 
-        - id: user-ru.practicum.service
-          uri: lb://user-ru.practicum.service
+        - id: request-service
+          uri: lb://request-service
+          predicates:
+            - Path=/users/*/requests/**,/users/*/events/*/requests/**
+
+        - id: user-service
+          uri: lb://user-service
           predicates:
             - Path=/admin/users/**
+
+        - id: rating-service
+          uri: lb://rating-service
+          predicates:
+            - Path=/v1/**
+
+        - id: event-service
+          uri: lb://event-service
+          predicates:
+            - Path=/events/**,/admin/events/**,/users/*/events/**,/categories/**,/admin/categories/**,/compilations/**,/admin/compilations/**

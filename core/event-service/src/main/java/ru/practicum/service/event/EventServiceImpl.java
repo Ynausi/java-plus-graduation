@@ -28,6 +28,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static ru.practicum.model.EventState.PUBLISHED;
@@ -88,8 +89,12 @@ public class EventServiceImpl implements EventService {
         Event createdEvent = eventRepository.save(newEvent);
 
         EventFullDto fullDto = eventMapper.toEventFullDto(createdEvent);
+
         fullDto.setViews(0L);
         fullDto.setConfirmedRequests(0L);
+        fullDto.setRating(0);
+
+        fullDto.setInitiator(new UserShortDto(initiator.getId(), initiator.getName()));
         return fullDto;
     }
 
@@ -252,7 +257,7 @@ public class EventServiceImpl implements EventService {
                                                Integer size,
                                                HttpServletRequest request) {
 
-        statsClient.hit(new HitRequestDto("ewm-main-ru.practicum.service", request.getRequestURI(), request.getRemoteAddr(),
+        statsClient.hit(new HitRequestDto("ewm-main-service", request.getRequestURI(), request.getRemoteAddr(),
                 LocalDateTime.now()));
 
         int page = from / size;
@@ -277,11 +282,74 @@ public class EventServiceImpl implements EventService {
 
         Map<Long, Long> viewsMap = getViewsMap(List.of(eventId));
         Long confirmedRequests = requestClient.getConfirmedCount(eventId);
+        Map<Long, Integer> ratingsMap = ratingClient.getRatings(List.of(eventId));
+        UserDto user = userClient.getUser(event.getInitiatorId());
 
         EventFullDto dto = eventMapper.toEventFullDto(event);
         dto.setViews(viewsMap.getOrDefault(eventId, 0L));
         dto.setConfirmedRequests(confirmedRequests);
+        dto.setRating(ratingsMap.getOrDefault(eventId,0));
+        dto.setInitiator(new UserShortDto(user.getId(),user.getName()));
         return dto;
+    }
+
+    @Override
+    public List<EventFullDto> getFullEventsByIds(List<Long> eventIds) {
+
+        if (eventIds == null || eventIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<Long, Event> eventsById = eventRepository.findAllById(eventIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        Event::getId,
+                        event -> event
+                ));
+
+        List<Event> events = eventIds.stream()
+                .map(eventsById::get)
+                .filter(Objects::nonNull)
+                .toList();
+
+        return enrichFullDtos(events);
+    }
+
+    @Override
+    public List<EventShortDto> getShortEventsByIds(List<Long> eventIds) {
+
+        if (eventIds == null || eventIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<Long, Event> eventsById = eventRepository.findAllById(eventIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        Event::getId,
+                        event -> event
+                ));
+
+        List<Event> events = eventIds.stream()
+                .map(eventsById::get)
+                .filter(Objects::nonNull)
+                .toList();
+
+        return enrichShortDtos(events);
+    }
+
+    @Override
+    public Map<Long, Long> getEventOwnersByInitiatorIds(List<Long> userIds) {
+
+        if (userIds == null || userIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        return eventRepository.findAllByInitiatorIdIn(userIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        Event::getId,
+                        Event::getInitiatorId
+                ));
     }
 
     private Map<Long, Long> getViewsMap(List<Long> eventIds) {
@@ -337,12 +405,15 @@ public class EventServiceImpl implements EventService {
         Map<Long, Long> confirmedRequestsMap = getConfirmedRequestsMap(eventIds);
         Map<Long, Integer> ratingsMap = ratingClient.getRatings(eventIds);
 
+        Map<Long, UserShortDto> initiatorsMap = getInitiatorsMap(events);
+
         return events.stream()
                 .map(event -> {
                     EventFullDto dto = eventMapper.toEventFullDto(event);
                     dto.setViews(viewsMap.getOrDefault(event.getId(), 0L));
                     dto.setConfirmedRequests(confirmedRequestsMap.getOrDefault(event.getId(), 0L));
                     dto.setRating(ratingsMap.getOrDefault(event.getId(), 0));
+                    dto.setInitiator(initiatorsMap.get(event.getInitiatorId()));
                     return dto;
                 })
                 .toList();
@@ -357,12 +428,15 @@ public class EventServiceImpl implements EventService {
         Map<Long, Long> confirmedRequestsMap = getConfirmedRequestsMap(eventIds);
         Map<Long, Integer> ratingsMap = ratingClient.getRatings(eventIds);
 
+        Map<Long, UserShortDto> initiatorsMap = getInitiatorsMap(events);
+
         return events.stream()
                 .map(event -> {
                     EventShortDto shortDto = eventMapper.toEventShortDto(event);
                     shortDto.setViews(viewsMap.getOrDefault(event.getId(), 0L));
                     shortDto.setConfirmedRequests(confirmedRequestsMap.getOrDefault(event.getId(), 0L));
                     shortDto.setRating(ratingsMap.getOrDefault(event.getId(), 0));
+                    shortDto.setInitiator(initiatorsMap.get(event.getInitiatorId()));
                     return shortDto;
                 })
                 .toList();
@@ -380,5 +454,27 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(
                         () -> new NotFoundException("Категория с id - " + categoryId + " не найдена")
                 );
+    }
+
+    private Map<Long, UserShortDto> getInitiatorsMap(List<Event> events) {
+
+        List<Long> userIds = events.stream()
+                .map(Event::getInitiatorId)
+                .distinct()
+                .toList();
+
+        if (userIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        return userClient.getUsers(userIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        UserDto::getId,
+                        user -> new UserShortDto(
+                                user.getId(),
+                                user.getName()
+                        )
+                ));
     }
 }

@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import ru.practicum.dto.*;
 
 import java.util.List;
+import java.util.Map;
 
 public interface EventService {
     List<EventShortDto> getEventsByUser(Long userId, Integer from, Integer size);
@@ -28,4 +29,10 @@ public interface EventService {
                                         HttpServletRequest request);
 
     EventFullDto getPublicEventById(Long eventId, HttpServletRequest request);
+
+    List<EventFullDto> getFullEventsByIds(List<Long> eventIds);
+
+    List<EventShortDto> getShortEventsByIds(List<Long> eventIds);
+
+    Map<Long, Long> getEventOwnersByInitiatorIds(List<Long> userIds);
 }

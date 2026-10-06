@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import ru.practicum.dto.UserRatingStatsDto;
 import ru.practicum.dto.UserShortDto;
 import ru.practicum.model.ReactionType;
 import ru.practicum.service.EventReactionService;
@@ -28,9 +29,9 @@ public class AdminRatingController {
         return eventReactionService.getUsersByReaction(eventIds, reaction, from, size);
     }
 
-    /*@GetMapping("/by-users")
+    @GetMapping("/by-users")
     public List<UserRatingStatsDto> getReactionsByUsersIds(@RequestParam List<Long> usersIds) {
         return eventReactionService.getUsersRatingStats(usersIds);
-    }*/
+    }
 
 }

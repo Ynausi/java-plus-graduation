@@ -11,9 +11,9 @@ spring:
     username: events
     password: events
 
-    jpa:
-      hibernate:
-        ddl-auto: update
+  jpa:
+    hibernate:
+      ddl-auto: update
 
 eureka:
   client:

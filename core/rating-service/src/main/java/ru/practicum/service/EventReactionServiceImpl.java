@@ -8,22 +8,19 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.client.EventClient;
 import ru.practicum.client.RequestClient;
 import ru.practicum.client.UserClient;
-import ru.practicum.dto.EventReactionDto;
-import ru.practicum.dto.UserShortDto;
+import ru.practicum.dto.*;
 import ru.practicum.exceptions.BadRequestException;
 import ru.practicum.exceptions.ConflictException;
 import ru.practicum.exceptions.NotFoundException;
 import ru.practicum.mapper.ReactionMapper;
+import ru.practicum.model.EventRatingProjection;
 import ru.practicum.model.EventReaction;
 import ru.practicum.model.ReactionProjection;
 import ru.practicum.model.ReactionType;
 import ru.practicum.repository.EventReactionRepository;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,6 +39,10 @@ public class EventReactionServiceImpl implements EventReactionService {
         Pageable pageable = PageRequest.of(from / size, size);
 
         List<Long> reactorsIds = reactionRepository.findReactorIdsByEventIdsAndReactionType(eventIds, reactionType, pageable);
+
+        if (reactorsIds.isEmpty()) {
+            return Collections.emptyList();
+        }
 
         return userClient.getUsers(reactorsIds)
                 .stream()
@@ -113,6 +114,107 @@ public class EventReactionServiceImpl implements EventReactionService {
                 ));
 
         reactionRepository.delete(reaction);
+    }
+
+    @Override
+    public List<EventFullDto> getFavoriteEvents(Long userId) {
+
+        userClient.getUser(userId);
+
+        List<Long> eventIds =
+                reactionRepository.findEventIdsByReactorIdAndReactionType(
+                        userId,
+                        ReactionType.LIKE
+                );
+
+        if (eventIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return eventClient.getFullEventsByIds(eventIds);
+    }
+
+    @Override
+    public List<EventShortDto> getTopEventsByRating(
+            Integer limit,
+            String order) {
+
+        List<EventRatingProjection> ratings =
+                reactionRepository.findAllEventRatings();
+
+        Comparator<EventRatingProjection> comparator =
+                Comparator.comparingLong(EventRatingProjection::getRating);
+
+        if (!"ASC".equalsIgnoreCase(order)) {
+            comparator = comparator.reversed();
+        }
+
+        List<Long> eventIds = ratings.stream()
+                .sorted(comparator)
+                .limit(limit)
+                .map(EventRatingProjection::getEventId)
+                .toList();
+
+        if (eventIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return eventClient.getShortEventsByIds(eventIds);
+    }
+
+    @Override
+    public List<UserRatingStatsDto> getUsersRatingStats(List<Long> userIds) {
+
+        if (userIds == null || userIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<Long, Long> eventOwners =
+                eventClient.getEventOwnersByInitiatorIds(userIds);
+
+        if (eventOwners.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Long> eventIds = eventOwners.keySet()
+                .stream()
+                .toList();
+
+        List<ReactionProjection> reactions =
+                reactionRepository.findEventReactionsByEventIds(eventIds);
+
+        Map<Long, UserRatingStatsDto> stats = new HashMap<>();
+
+        for (ReactionProjection reaction : reactions) {
+
+            Long ownerId = eventOwners.get(reaction.getEventId());
+
+            if (ownerId == null) {
+                continue;
+            }
+
+            UserRatingStatsDto userStats =
+                    stats.computeIfAbsent(
+                            ownerId,
+                            id -> new UserRatingStatsDto(
+                                    id,
+                                    0L,
+                                    0L
+                            )
+                    );
+
+            if (reaction.getReaction() == ReactionType.LIKE) {
+                userStats.setLikes(userStats.getLikes() + 1);
+            } else if (reaction.getReaction() == ReactionType.DISLIKE) {
+                userStats.setDislikes(userStats.getDislikes() + 1);
+            }
+        }
+
+        return userIds.stream()
+                .distinct()
+                .map(stats::get)
+                .filter(Objects::nonNull)
+                .toList();
     }
 
     private void validateUserParticipant(Long userId, Long eventId) {

@@ -3,9 +3,12 @@ package ru.practicum.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.dto.EventFullDto;
 import ru.practicum.dto.EventReactionDto;
 import ru.practicum.model.ReactionType;
 import ru.practicum.service.EventReactionService;
+
+import java.util.List;
 
 
 @RestController
@@ -31,8 +34,8 @@ public class PrivateRatingController {
         eventReactionService.deleteReaction(userId, eventId, reaction);
     }
 
-    /*@GetMapping
+    @GetMapping
     public List<EventFullDto> getEventsUserLiked(@PathVariable Long userId) {
-        return eventService.getFavoriteEvents(userId);
-    }*/
+        return eventReactionService.getFavoriteEvents(userId);
+    }
 }
