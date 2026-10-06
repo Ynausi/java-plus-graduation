@@ -104,19 +104,13 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("Событие с id - " + eventId + " не найдено"));
 
-        Map<Long, Long> viewsMap = getViewsMap(List.of(eventId));
-        Map<Long, Integer> ratingsMap = ratingClient.getRatings(List.of(eventId));
 
-        Long confirmedRequests = requestClient.getConfirmedCount(eventId);
-        EventFullDto eventFullDto = eventMapper.toEventFullDto(event);
-        eventFullDto.setViews(viewsMap.getOrDefault(eventId, 0L));
-        eventFullDto.setConfirmedRequests(confirmedRequests);
-        eventFullDto.setRating(ratingsMap.getOrDefault(eventId, 0));
-        return eventFullDto;
+        return enrichFullDtos(List.of(event)).get(0);
     }
 
     @Override
     public EventForRequestDto getEventById(Long eventId) {
+
         Event event = eventRepository.findById(eventId).orElseThrow(() ->
                 new NotFoundException("No event with id:" + eventId));
         return eventMapper.toEventForRequestDto(event);
@@ -177,7 +171,13 @@ public class EventServiceImpl implements EventService {
         if (updateEventUserRequest.getTitle() != null)
             event.setTitle(updateEventUserRequest.getTitle());
 
-        return eventMapper.toEventFullDto(eventRepository.save(event));
+
+        Event savedEvent =
+                eventRepository.save(event);
+
+        return enrichFullDtos(
+                List.of(savedEvent)
+        ).get(0);
     }
 
     @Override
@@ -245,9 +245,17 @@ public class EventServiceImpl implements EventService {
         if (request.getTitle() != null)
             event.setTitle(request.getTitle());
 
-        log.info("Событие с id - {} обновлено администратором", eventId);
+        log.info(
+                "Событие с id - {} обновлено администратором",
+                eventId
+        );
 
-        return eventMapper.toEventFullDto(eventRepository.save(event));
+        Event savedEvent =
+                eventRepository.save(event);
+
+        return enrichFullDtos(
+                List.of(savedEvent)
+        ).get(0);
     }
 
     @Override
@@ -277,7 +285,7 @@ public class EventServiceImpl implements EventService {
             throw new NotFoundException("Событие с id - " + eventId + " не найдено");
         }
 
-        statsClient.hit(new HitRequestDto("ewm-main-ru.practicum.service", request.getRequestURI(), request.getRemoteAddr(),
+        statsClient.hit(new HitRequestDto("ewm-main-service", request.getRequestURI(), request.getRemoteAddr(),
                 LocalDateTime.now()));
 
         Map<Long, Long> viewsMap = getViewsMap(List.of(eventId));
@@ -312,7 +320,7 @@ public class EventServiceImpl implements EventService {
                 .filter(Objects::nonNull)
                 .toList();
 
-        return enrichFullDtos(events);
+        return enrichFullDtosWithoutRating(events);
     }
 
     @Override
@@ -334,7 +342,7 @@ public class EventServiceImpl implements EventService {
                 .filter(Objects::nonNull)
                 .toList();
 
-        return enrichShortDtos(events);
+        return enrichShortDtosWithoutRating(events);
     }
 
     @Override
@@ -419,6 +427,33 @@ public class EventServiceImpl implements EventService {
                 .toList();
     }
 
+    private List<EventFullDto> enrichFullDtosWithoutRating(
+            List<Event> events) {
+
+        if (events.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Long> eventIds = events.stream()
+                .map(Event::getId)
+                .toList();
+
+        Map<Long, Long> viewsMap = getViewsMap(eventIds);
+        Map<Long, Long> confirmedRequestsMap = getConfirmedRequestsMap(eventIds);
+        Map<Long, UserShortDto> initiatorsMap = getInitiatorsMap(events);
+
+        return events.stream()
+                .map(event -> {
+                    EventFullDto dto = eventMapper.toEventFullDto(event);
+                    dto.setViews(viewsMap.getOrDefault(event.getId(), 0L));
+                    dto.setConfirmedRequests(confirmedRequestsMap.getOrDefault(event.getId(), 0L));
+                    dto.setInitiator(initiatorsMap.get(event.getInitiatorId()));
+                    dto.setRating(0);
+                    return dto;
+                })
+                .toList();
+    }
+
     private List<EventShortDto> enrichShortDtos(List<Event> events) {
         if (events.isEmpty()) return Collections.emptyList();
 
@@ -438,6 +473,33 @@ public class EventServiceImpl implements EventService {
                     shortDto.setRating(ratingsMap.getOrDefault(event.getId(), 0));
                     shortDto.setInitiator(initiatorsMap.get(event.getInitiatorId()));
                     return shortDto;
+                })
+                .toList();
+    }
+
+    private List<EventShortDto> enrichShortDtosWithoutRating(
+            List<Event> events) {
+
+        if (events.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Long> eventIds = events.stream()
+                .map(Event::getId)
+                .toList();
+
+        Map<Long, Long> viewsMap = getViewsMap(eventIds);
+        Map<Long, Long> confirmedRequestsMap = getConfirmedRequestsMap(eventIds);
+        Map<Long, UserShortDto> initiatorsMap = getInitiatorsMap(events);
+
+        return events.stream()
+                .map(event -> {
+                    EventShortDto dto = eventMapper.toEventShortDto(event);
+                    dto.setViews(viewsMap.getOrDefault(event.getId(), 0L));
+                    dto.setConfirmedRequests(confirmedRequestsMap.getOrDefault(event.getId(), 0L));
+                    dto.setInitiator(initiatorsMap.get(event.getInitiatorId()));
+                    dto.setRating(0);
+                    return dto;
                 })
                 .toList();
     }

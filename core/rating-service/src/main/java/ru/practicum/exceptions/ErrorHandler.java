@@ -1,5 +1,6 @@
 package ru.practicum.exceptions;
 
+import feign.FeignException;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +38,8 @@ public class ErrorHandler {
         return handleException(e, HttpStatus.BAD_REQUEST, "Incorrectly made request.");
     }
 
+
+
     @ExceptionHandler(Throwable.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ApiError handleThrowable(final Throwable e) {
@@ -45,11 +48,16 @@ public class ErrorHandler {
 
     @ExceptionHandler({
             EntityNotFoundException.class,
-            NotFoundException.class
+            NotFoundException.class,
+            FeignException.NotFound.class
     })
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ApiError handeNotFoundException(final RuntimeException e) {
-        return handleException(e, HttpStatus.NOT_FOUND, "The required object was not found.");
+    public ApiError handleNotFoundException(final RuntimeException e) {
+        return handleException(
+                e,
+                HttpStatus.NOT_FOUND,
+                "The required object was not found."
+        );
     }
 
     @ExceptionHandler({

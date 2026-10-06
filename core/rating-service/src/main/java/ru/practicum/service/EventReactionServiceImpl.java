@@ -55,9 +55,7 @@ public class EventReactionServiceImpl implements EventReactionService {
 
     @Override
     @Transactional
-    public EventReactionDto addReaction(Long userId,
-                                              Long eventId,
-                                              ReactionType reactionType) {
+    public EventReactionDto addReaction(Long userId, Long eventId, ReactionType reactionType) {
         userClient.getUser(userId);
         eventClient.getEvent(eventId);
 
@@ -120,30 +118,25 @@ public class EventReactionServiceImpl implements EventReactionService {
     public List<EventFullDto> getFavoriteEvents(Long userId) {
 
         userClient.getUser(userId);
-
-        List<Long> eventIds =
-                reactionRepository.findEventIdsByReactorIdAndReactionType(
-                        userId,
-                        ReactionType.LIKE
-                );
+        List<Long> eventIds = reactionRepository.findEventIdsByReactorIdAndReactionType(userId, ReactionType.LIKE);
 
         if (eventIds.isEmpty()) {
             return Collections.emptyList();
         }
 
-        return eventClient.getFullEventsByIds(eventIds);
+        List<EventFullDto> events = eventClient.getFullEventsByIds(eventIds);
+        Map<Long, Integer> ratings = getRatings(eventIds);
+        events.forEach(event -> event.setRating(ratings.getOrDefault(event.getId(), 0)));
+
+        return events;
     }
 
     @Override
-    public List<EventShortDto> getTopEventsByRating(
-            Integer limit,
-            String order) {
+    public List<EventShortDto> getTopEventsByRating(Integer limit, String order) {
 
-        List<EventRatingProjection> ratings =
-                reactionRepository.findAllEventRatings();
+        List<EventRatingProjection> ratings = reactionRepository.findAllEventRatings();
 
-        Comparator<EventRatingProjection> comparator =
-                Comparator.comparingLong(EventRatingProjection::getRating);
+        Comparator<EventRatingProjection> comparator = Comparator.comparingLong(EventRatingProjection::getRating);
 
         if (!"ASC".equalsIgnoreCase(order)) {
             comparator = comparator.reversed();
@@ -159,7 +152,16 @@ public class EventReactionServiceImpl implements EventReactionService {
             return Collections.emptyList();
         }
 
-        return eventClient.getShortEventsByIds(eventIds);
+        List<EventShortDto> events = eventClient.getShortEventsByIds(eventIds);
+
+        Map<Long, Integer> ratingsMap =
+                ratings.stream()
+                        .collect(Collectors.toMap(EventRatingProjection::getEventId,
+                                rating -> Math.toIntExact(rating.getRating())));
+
+        events.forEach(event -> event.setRating(ratingsMap.getOrDefault(event.getId(), 0)));
+
+        return events;
     }
 
     @Override
@@ -169,8 +171,7 @@ public class EventReactionServiceImpl implements EventReactionService {
             return Collections.emptyList();
         }
 
-        Map<Long, Long> eventOwners =
-                eventClient.getEventOwnersByInitiatorIds(userIds);
+        Map<Long, Long> eventOwners = eventClient.getEventOwnersByInitiatorIds(userIds);
 
         if (eventOwners.isEmpty()) {
             return Collections.emptyList();
@@ -180,28 +181,18 @@ public class EventReactionServiceImpl implements EventReactionService {
                 .stream()
                 .toList();
 
-        List<ReactionProjection> reactions =
-                reactionRepository.findEventReactionsByEventIds(eventIds);
-
+        List<ReactionProjection> reactions = reactionRepository.findEventReactionsByEventIds(eventIds);
         Map<Long, UserRatingStatsDto> stats = new HashMap<>();
 
         for (ReactionProjection reaction : reactions) {
 
             Long ownerId = eventOwners.get(reaction.getEventId());
-
             if (ownerId == null) {
                 continue;
             }
 
-            UserRatingStatsDto userStats =
-                    stats.computeIfAbsent(
-                            ownerId,
-                            id -> new UserRatingStatsDto(
-                                    id,
-                                    0L,
-                                    0L
-                            )
-                    );
+            UserRatingStatsDto userStats = stats.computeIfAbsent(ownerId,
+                    id -> new UserRatingStatsDto(id, 0L, 0L));
 
             if (reaction.getReaction() == ReactionType.LIKE) {
                 userStats.setLikes(userStats.getLikes() + 1);
