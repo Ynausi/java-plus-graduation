@@ -14,21 +14,6 @@ services:
       interval: 5s
       retries: 10
 
-  ewm-db:
-    image: postgres:16.1
-    container_name: ewm-db
-    ports:
-      - "6643:5432"
-    environment:
-      POSTGRES_DB: main
-      POSTGRES_USER: main
-      POSTGRES_PASSWORD: main
-    healthcheck:
-      test: pg_isready -q -d main -U main
-      timeout: 5s
-      interval: 5s
-      retries: 10
-
   stats-server:
     build: stat/stats-server
     container_name: stats-server
@@ -41,26 +26,6 @@ services:
     depends_on:
       stats-db:
         condition: service_healthy
-      discovery-server:
-        condition: service_started
-      config-server:
-        condition: service_started
-    restart: on-failure
-
-  ewm-service:
-    build: ./core/main-service
-    container_name: ewm-ru.practicum.service
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/main
-      SPRING_DATASOURCE_USERNAME: main
-      SPRING_DATASOURCE_PASSWORD: main
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
-      SPRING_CONFIG_IMPORT: configserver:http://config-server:8888
-    depends_on:
-      ewm-db:
-        condition: service_healthy
-      stats-server:
-        condition: service_started
       discovery-server:
         condition: service_started
       config-server:
