@@ -19,4 +19,6 @@ public interface UsersRepository extends JpaRepository<User, Long> {
         return findById(userId).orElseThrow(() ->
                 new UserNotFoundException(String.format("User with id=%s was not found", userId)));
     }
+
+    boolean existsByEmail(String email);
 }

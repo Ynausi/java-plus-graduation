@@ -290,7 +290,7 @@ public class EventServiceImpl implements EventService {
 
         Map<Long, Long> viewsMap = getViewsMap(List.of(eventId));
         Long confirmedRequests = requestClient.getConfirmedCount(eventId);
-        Map<Long, Integer> ratingsMap = ratingClient.getRatings(List.of(eventId));
+        Map<Long, Integer> ratingsMap = getRatingsMap(List.of(eventId));
         UserDto user = userClient.getUser(event.getInitiatorId());
 
         EventFullDto dto = eventMapper.toEventFullDto(event);
@@ -411,7 +411,7 @@ public class EventServiceImpl implements EventService {
 
         Map<Long, Long> viewsMap = getViewsMap(eventIds);
         Map<Long, Long> confirmedRequestsMap = getConfirmedRequestsMap(eventIds);
-        Map<Long, Integer> ratingsMap = ratingClient.getRatings(eventIds);
+        Map<Long, Integer> ratingsMap = getRatingsMap(eventIds);
 
         Map<Long, UserShortDto> initiatorsMap = getInitiatorsMap(events);
 
@@ -461,7 +461,7 @@ public class EventServiceImpl implements EventService {
 
         Map<Long, Long> viewsMap = getViewsMap(eventIds);
         Map<Long, Long> confirmedRequestsMap = getConfirmedRequestsMap(eventIds);
-        Map<Long, Integer> ratingsMap = ratingClient.getRatings(eventIds);
+        Map<Long, Integer> ratingsMap = getRatingsMap(eventIds);
 
         Map<Long, UserShortDto> initiatorsMap = getInitiatorsMap(events);
 
@@ -475,6 +475,28 @@ public class EventServiceImpl implements EventService {
                     return shortDto;
                 })
                 .toList();
+    }
+
+    private Map<Long, Integer> getRatingsMap(List<Long> eventIds) {
+        if (eventIds == null || eventIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        try {
+            Map<Long, Integer> ratings = ratingClient.getRatings(eventIds);
+
+            return ratings != null
+                    ? ratings
+                    : Collections.emptyMap();
+
+        } catch (Exception e) {
+            log.warn(
+                    "Rating service is not available, returning zero ratings: {}",
+                    e.getMessage()
+            );
+
+            return Collections.emptyMap();
+        }
     }
 
     private List<EventShortDto> enrichShortDtosWithoutRating(

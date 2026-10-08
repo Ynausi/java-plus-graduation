@@ -39,6 +39,12 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
         EventForRequestDto event = eventClient.getEvent(eventId);
 
+        if (requestRepository.existsByRequesterIdAndEventId(userId, eventId)) {
+            throw new ConflictException(
+                    "Participation request already exists"
+            );
+        }
+
         validateRequest(event, userId);
 
         ParticipationRequest request = mapper.toEntity(userId, eventId);

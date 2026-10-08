@@ -28,6 +28,7 @@ public interface EventMapper {
     @Mapping(target = "confirmedRequests", ignore = true)
     @Mapping(target = "views", ignore = true)
     @Mapping(target = "rating", ignore = true)
+    @Mapping(target = "state", source = "eventState")
     EventFullDto toEventFullDto(Event event);
 
     LocationDto toLocationDto(Location location);

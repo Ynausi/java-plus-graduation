@@ -1,5 +1,6 @@
 package ru.practicum.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import ru.practicum.dto.category.CategoryResponse;
 
@@ -20,5 +21,6 @@ public class EventShortDto {
     private Long views;
     private Boolean paid;
     private Integer rating;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
 }

@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.dto.NewUserRequest;
 import ru.practicum.dto.UserDto;
+import ru.practicum.exceptions.UserAlreadyExistsException;
 import ru.practicum.exceptions.UserNotFoundException;
 import ru.practicum.mapper.UserMapper;
 import ru.practicum.model.User;
@@ -23,7 +24,15 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserDto createUser(NewUserRequest newUserRequest) {
-        User newUser = usersRepository.save(userMapper.newUserRequestToUser(newUserRequest));
+        if (usersRepository.existsByEmail(newUserRequest.getEmail())) {
+            throw new UserAlreadyExistsException(
+                    "User with email=" + newUserRequest.getEmail() + " already exists"
+            );
+        }
+
+        User newUser = usersRepository.save(
+                userMapper.newUserRequestToUser(newUserRequest)
+        );
 
         return userMapper.userToUserDto(newUser);
     }

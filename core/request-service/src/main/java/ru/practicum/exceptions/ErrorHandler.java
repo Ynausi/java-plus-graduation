@@ -3,9 +3,13 @@ package ru.practicum.exceptions;
 import feign.FeignException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
 
@@ -55,15 +59,25 @@ public class ErrorHandler {
                 .body(error);
     }
 
-    @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity<ApiError> handleBadRequest(BadRequestException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiError.builder()
-                        .status(HttpStatus.BAD_REQUEST)
-                        .reason("Incorrectly made request.")
-                        .message(e.getMessage())
-                        .timestamp(LocalDateTime.now())
-                        .build());
+    @ExceptionHandler({
+            MethodArgumentNotValidException.class,
+            MissingServletRequestParameterException.class,
+            MethodArgumentTypeMismatchException.class,
+            HandlerMethodValidationException.class,
+            HttpMessageNotReadableException.class,
+            IllegalArgumentException.class
+    })
+    public ResponseEntity<ApiError> handleValidation(Exception e) {
+        ApiError error = ApiError.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .reason("Incorrectly made request.")
+                .message(e.getMessage())
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(error);
     }
 
     @ExceptionHandler(ConflictException.class)
@@ -77,19 +91,6 @@ public class ErrorHandler {
                         .build());
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException e) {
-        ApiError error = ApiError.builder()
-                .status(HttpStatus.BAD_REQUEST)
-                .reason("Incorrectly made request.")
-                .message("Validation error")
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(error);
-    }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleException(Exception e) {
