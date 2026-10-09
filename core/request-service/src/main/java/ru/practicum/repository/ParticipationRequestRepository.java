@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
+
 public interface ParticipationRequestRepository extends JpaRepository<ParticipationRequest, Long> {
 
     @Query("SELECT pr.eventId, COUNT(pr.id) " +

@@ -34,6 +34,9 @@ public class EventReactionServiceImpl implements EventReactionService {
     private final EventClient eventClient;
     private final ReactionMapper reactionMapper;
 
+    private static final long INITIAL_REACTION_COUNT = 0L;
+    private static final long REACTION_COUNT_INCREMENT = 1L;
+
     @Override
     public List<UserShortDto> getUsersByReaction(List<Long> eventIds, ReactionType reactionType, Integer from, Integer size) {
         Pageable pageable = PageRequest.of(from / size, size);
@@ -192,12 +195,12 @@ public class EventReactionServiceImpl implements EventReactionService {
             }
 
             UserRatingStatsDto userStats = stats.computeIfAbsent(ownerId,
-                    id -> new UserRatingStatsDto(id, 0L, 0L));
+                    id -> new UserRatingStatsDto(id, INITIAL_REACTION_COUNT, INITIAL_REACTION_COUNT));
 
             if (reaction.getReaction() == ReactionType.LIKE) {
-                userStats.setLikes(userStats.getLikes() + 1);
+                userStats.setLikes(userStats.getLikes() + REACTION_COUNT_INCREMENT);
             } else if (reaction.getReaction() == ReactionType.DISLIKE) {
-                userStats.setDislikes(userStats.getDislikes() + 1);
+                userStats.setDislikes(userStats.getDislikes() + REACTION_COUNT_INCREMENT);
             }
         }
 

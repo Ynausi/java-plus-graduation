@@ -11,6 +11,7 @@ import ru.practicum.dto.EventSearchFilterPublic;
 import ru.practicum.dto.EventShortDto;
 import ru.practicum.dto.PublicEventSort;
 import ru.practicum.service.event.EventService;
+import ru.practicum.util.DateTimeFormatConstants;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,8 +28,8 @@ public class PublicEventsController {
                                                @RequestParam(required = false) List<@Positive Long> categories,
                                                @RequestParam(required = false) List<@Positive Long> users,
                                                @RequestParam(required = false) Boolean paid,
-                                               @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
-                                               @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
+                                               @RequestParam(required = false) @DateTimeFormat(pattern = DateTimeFormatConstants.DATE_TIME_PATTERN) LocalDateTime rangeStart,
+                                               @RequestParam(required = false) @DateTimeFormat(pattern = DateTimeFormatConstants.DATE_TIME_PATTERN) LocalDateTime rangeEnd,
                                                @RequestParam(defaultValue = "false") Boolean onlyAvailable,
                                                @RequestParam(required = false) PublicEventSort sort,
                                                @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,

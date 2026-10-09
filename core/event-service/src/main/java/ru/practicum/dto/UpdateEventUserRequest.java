@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import ru.practicum.util.DateTimeFormatConstants;
 
 import java.time.LocalDateTime;
 
@@ -23,7 +24,7 @@ public class UpdateEventUserRequest {
     @Size(min = 20, max = 7000)
     private String description;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = DateTimeFormatConstants.DATE_TIME_PATTERN)
     private LocalDateTime eventDate;
 
     @Valid

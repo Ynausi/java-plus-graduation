@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import ru.practicum.util.DateTimeFormatConstants;
 
 import java.time.LocalDateTime;
 
@@ -29,7 +30,7 @@ public class NewEventDto {
     private String description;
 
     @NotNull
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = DateTimeFormatConstants.DATE_TIME_PATTERN)
     private LocalDateTime eventDate;
 
     @NotNull
