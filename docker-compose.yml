@@ -14,21 +14,6 @@ services:
       interval: 5s
       retries: 10
 
-  ewm-db:
-    image: postgres:16.1
-    container_name: ewm-db
-    ports:
-      - "6643:5432"
-    environment:
-      POSTGRES_DB: main
-      POSTGRES_USER: main
-      POSTGRES_PASSWORD: main
-    healthcheck:
-      test: pg_isready -q -d main -U main
-      timeout: 5s
-      interval: 5s
-      retries: 10
-
   stats-server:
     build: stat/stats-server
     container_name: stats-server
@@ -41,26 +26,6 @@ services:
     depends_on:
       stats-db:
         condition: service_healthy
-      discovery-server:
-        condition: service_started
-      config-server:
-        condition: service_started
-    restart: on-failure
-
-  ewm-service:
-    build: ./core/main-service
-    container_name: ewm-service
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/main
-      SPRING_DATASOURCE_USERNAME: main
-      SPRING_DATASOURCE_PASSWORD: main
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
-      SPRING_CONFIG_IMPORT: configserver:http://config-server:8888
-    depends_on:
-      ewm-db:
-        condition: service_healthy
-      stats-server:
-        condition: service_started
       discovery-server:
         condition: service_started
       config-server:
@@ -98,3 +63,59 @@ services:
       config-server:
         condition: service_started
     restart: on-failure
+
+  users-db:
+    image: postgres:16.1
+    ports:
+      - "6644:5432"
+    environment:
+      POSTGRES_DB: users
+      POSTGRES_USER: users
+      POSTGRES_PASSWORD: users
+    healthcheck:
+      test: pg_isready -q -d users -U users
+      timeout: 5s
+      interval: 5s
+      retries: 10
+
+  requests-db:
+    image: postgres:16.1
+    ports:
+      - "6645:5432"
+    environment:
+      POSTGRES_DB: requests
+      POSTGRES_USER: requests
+      POSTGRES_PASSWORD: requests
+    healthcheck:
+      test: pg_isready -q -d requests -U requests
+      timeout: 5s
+      interval: 5s
+      retries: 10
+
+  events-db:
+    image: postgres:16.1
+    ports:
+      - "6646:5432"
+    environment:
+      POSTGRES_DB: events
+      POSTGRES_USER: events
+      POSTGRES_PASSWORD: events
+    healthcheck:
+      test: pg_isready -q -d events -U events
+      timeout: 5s
+      interval: 5s
+      retries: 10
+
+  ratings-db:
+    image: postgres:16.1
+    ports:
+      - "6647:5432"
+    environment:
+      POSTGRES_DB: ratings
+      POSTGRES_USER: ratings
+      POSTGRES_PASSWORD: ratings
+    healthcheck:
+      test: pg_isready -q -d ratings -U ratings
+      timeout: 5s
+      interval: 5s
+      retries: 10
