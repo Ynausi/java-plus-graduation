@@ -9,7 +9,9 @@ import java.util.Optional;
 
 public interface UserInteractionRepository extends JpaRepository<UserInteraction, Long> {
     Optional<UserInteraction> findByUserIdAndEventId(Long userId, Long eventId);
+
     List<UserInteraction> findByUserId(Long userId);
+
     List<UserInteraction> findByUserIdOrderByUpdatedAtDesc(Long userId);
 
     @Query("""
