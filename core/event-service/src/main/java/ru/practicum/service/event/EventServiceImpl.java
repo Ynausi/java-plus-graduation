@@ -460,7 +460,7 @@ public class EventServiceImpl implements EventService {
         List<Long> eventIds = events.stream().map(Event::getId).toList();
 
         Map<Long, Long> confirmedRequestsMap = getConfirmedRequestsMap(eventIds);
-        Map<Long, Integer> ratingsMap = getRatingsMap(eventIds);
+        Map<Long, Double> ratingsMap = getRecommendationRatingsMap(eventIds);
 
         Map<Long, UserShortDto> initiatorsMap = getInitiatorsMap(events);
 
