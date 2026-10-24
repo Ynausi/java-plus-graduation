@@ -40,8 +40,24 @@ public class PublicEventsController {
         return eventService.getEventsPublic(filter, from, size, request);
     }
 
+    @GetMapping("/recommendations")
+    public List<EventShortDto> getRecommendations(
+            @RequestHeader("X-EWM-USER-ID") Long userId,
+            @RequestParam(defaultValue = "10") @Positive Integer maxResults) {
+        return eventService.getRecommendations(userId, maxResults);
+    }
+
+    @PutMapping("/{eventId}/like")
+    public void likeEvent(
+            @PathVariable Long eventId,
+            @RequestHeader("X-EWM-USER-ID") Long userId) {
+        eventService.likeEvent(userId, eventId);
+    }
+
     @GetMapping("/{id}")
-    public EventFullDto getEventPublicById(@PathVariable Long id, HttpServletRequest request) {
-        return eventService.getPublicEventById(id, request);
+    public EventFullDto getEventPublicById(
+            @PathVariable Long id,
+            @RequestHeader("X-EWM-USER-ID") Long userId) {
+        return eventService.getPublicEventById(id, userId);
     }
 }

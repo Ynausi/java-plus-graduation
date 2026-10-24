@@ -19,9 +19,8 @@ public class EventShortDto {
     private CategoryResponse category;
     private UserShortDto initiator;
     private Long confirmedRequests;
-    private Long views;
     private Boolean paid;
-    private Integer rating;
+    private Double rating;
     @JsonFormat(pattern = DateTimeFormatConstants.DATE_TIME_PATTERN)
     private LocalDateTime eventDate;
 }
