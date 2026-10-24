@@ -13,6 +13,8 @@ import ru.practicum.mapper.ParticipationRequestMapper;
 import ru.practicum.model.ParticipationRequest;
 import ru.practicum.model.RequestStatus;
 import ru.practicum.repository.ParticipationRequestRepository;
+import ru.practicum.ewm.stats.proto.ActionTypeProto;
+import ru.practicum.stats.CollectorClient;
 import ru.practicum.dto.ParticipationRequestDto;
 
 
@@ -31,6 +33,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     private final ParticipationRequestMapper mapper;
     private final UserClient userClient;
     private final EventClient eventClient;
+    private final CollectorClient collectorClient;
 
     @Override
     @Transactional
@@ -53,7 +56,15 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
             request.setStatus(RequestStatus.CONFIRMED);
         }
 
-        return mapper.toDto(requestRepository.save(request));
+        ParticipationRequest savedRequest = requestRepository.save(request);
+
+        collectorClient.collectUserAction(
+                userId,
+                eventId,
+                ActionTypeProto.ACTION_REGISTER
+        );
+
+        return mapper.toDto(savedRequest);
     }
 
     @Override
