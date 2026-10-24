@@ -1,5 +1,6 @@
 package ru.practicum.collector.config;
 
+import com.netflix.appinfo.InstanceInfo;
 import com.netflix.discovery.EurekaClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +25,9 @@ public class GrpcEurekaRegistration {
         eurekaInstanceConfig.getMetadataMap().put("grpcPort", port);
         eurekaClient.getApplicationInfoManager()
                 .registerAppMetadata(eurekaInstanceConfig.getMetadataMap());
+        eurekaClient.getApplicationInfoManager()
+                .setInstanceStatus(InstanceInfo.InstanceStatus.UP);
 
-        log.info("Published gRPC port {} to Eureka metadata", port);
+        log.info("Published gRPC port {} to Eureka metadata and marked service UP", port);
     }
 }
