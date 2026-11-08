@@ -280,7 +280,7 @@ public class EventServiceImpl implements EventService {
         }
 
         userClient.getUser(userId);
-        collectorClient.collectUserAction(userId, eventId, ActionTypeProto.ACTION_VIEW);
+        sendActionSafely(userId, eventId, ActionTypeProto.ACTION_VIEW);
 
         Long confirmedRequests = requestClient.getConfirmedCount(eventId);
         Map<Long, Double> ratingsMap = getRecommendationRatingsMap(List.of(eventId));
@@ -297,8 +297,13 @@ public class EventServiceImpl implements EventService {
     public List<EventShortDto> getRecommendations(Long userId, Integer maxResults) {
         userClient.getUser(userId);
 
-        List<RecommendedEventProto> recommendations =
-                analyzerClient.getRecommendationsForUser(userId, maxResults);
+        List<RecommendedEventProto> recommendations;
+        try {
+            recommendations = analyzerClient.getRecommendationsForUser(userId, maxResults);
+        } catch (RuntimeException e) {
+            log.warn("Analyzer is unavailable for recommendations of user {}", userId, e);
+            return Collections.emptyList();
+        }
 
         if (recommendations.isEmpty()) {
             return Collections.emptyList();
@@ -336,7 +341,7 @@ public class EventServiceImpl implements EventService {
             );
         }
 
-        collectorClient.collectUserAction(userId, eventId, ActionTypeProto.ACTION_LIKE);
+        sendActionSafely(userId, eventId, ActionTypeProto.ACTION_LIKE);
     }
 
     @Override
@@ -473,6 +478,15 @@ public class EventServiceImpl implements EventService {
                     return shortDto;
                 })
                 .toList();
+    }
+
+    private void sendActionSafely(Long userId, Long eventId, ActionTypeProto actionType) {
+        try {
+            collectorClient.collectUserAction(userId, eventId, actionType);
+        } catch (RuntimeException e) {
+            log.warn("Collector is unavailable: user={}, event={}, action={}",
+                    userId, eventId, actionType, e);
+        }
     }
 
     private Map<Long, Double> getRecommendationRatingsMap(List<Long> eventIds) {

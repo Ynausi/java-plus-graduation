@@ -1,8 +1,11 @@
 package ru.practicum.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import ru.practicum.client.UserClient;
 import ru.practicum.client.EventClient;
 import ru.practicum.dto.*;
@@ -25,6 +28,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ParticipationRequestServiceImpl implements ParticipationRequestService {
@@ -58,11 +62,18 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
         ParticipationRequest savedRequest = requestRepository.save(request);
 
-        collectorClient.collectUserAction(
-                userId,
-                eventId,
-                ActionTypeProto.ACTION_REGISTER
-        );
+        // Publish only after the request has actually been committed.
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                try {
+                    collectorClient.collectUserAction(userId, eventId, ActionTypeProto.ACTION_REGISTER);
+                } catch (RuntimeException e) {
+                    log.warn("Failed to publish REGISTER action for user {} and event {}",
+                            userId, eventId, e);
+                }
+            }
+        });
 
         return mapper.toDto(savedRequest);
     }
