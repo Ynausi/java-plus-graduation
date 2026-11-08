@@ -11,8 +11,14 @@
 
     <artifactId>stat</artifactId>
     <packaging>pom</packaging>
+
     <modules>
+        <module>stats-proto</module>
+        <module>stats-avro</module>
         <module>stat-client</module>
+        <module>collector</module>
+        <module>aggregator</module>
+        <module>analyzer</module>
         <module>stat-dto</module>
         <module>stats-server</module>
     </modules>

@@ -100,7 +100,11 @@ public interface EventService {
      * @param request HTTP-запрос для учёта просмотра
      * @return полное представление события
      */
-    EventFullDto getPublicEventById(Long eventId, HttpServletRequest request);
+    EventFullDto getPublicEventById(Long eventId, Long userId);
+
+    List<EventShortDto> getRecommendations(Long userId, Integer maxResults);
+
+    void likeEvent(Long userId, Long eventId);
 
     /**
      * Возвращает полные представления событий по идентификаторам.

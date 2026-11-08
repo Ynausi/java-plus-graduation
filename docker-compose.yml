@@ -1,4 +1,103 @@
 services:
+
+  kafka:
+    image: confluentinc/confluent-local:7.4.3
+    hostname: kafka
+    container_name: kafka
+    ports:
+      - "9092:9092"
+      - "9101:9101"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      CLUSTER_ID: 'K0EA9p0yEe6MkAAAAkKsEg'
+
+  kafka-init-topics:
+    image: confluentinc/confluent-local:7.4.3
+    container_name: kafka-init-topics
+    depends_on:
+      - kafka
+    command: >
+      bash -c "
+      kafka-topics --create --topic stats.user-actions.v1
+      --partitions 1 --replication-factor 1 --if-not-exists
+      --bootstrap-server kafka:29092 &&
+      kafka-topics --create --topic stats.events-similarity.v1
+      --partitions 1 --replication-factor 1 --if-not-exists
+      --bootstrap-server kafka:29092"
+
+  analyzer-db:
+    image: postgres:16.1
+    container_name: analyzer-db
+    ports:
+      - "6648:5432"
+    environment:
+      POSTGRES_DB: analyzer
+      POSTGRES_USER: analyzer
+      POSTGRES_PASSWORD: analyzer
+    healthcheck:
+      test: pg_isready -q -d analyzer -U analyzer
+      timeout: 5s
+      interval: 5s
+      retries: 10
+
+  collector:
+    build: ./stat/collector
+    container_name: collector
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      SPRING_CONFIG_IMPORT: configserver:http://config-server:8888
+    depends_on:
+      kafka-init-topics:
+        condition: service_completed_successfully
+      discovery-server:
+        condition: service_started
+      config-server:
+        condition: service_started
+    restart: on-failure
+
+  aggregator:
+    build: ./stat/aggregator
+    container_name: aggregator
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      SPRING_CONFIG_IMPORT: configserver:http://config-server:8888
+    depends_on:
+      kafka-init-topics:
+        condition: service_completed_successfully
+      discovery-server:
+        condition: service_started
+      config-server:
+        condition: service_started
+    restart: on-failure
+
+  analyzer:
+    build: ./stat/analyzer
+    container_name: analyzer
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_DATASOURCE_URL: jdbc:postgresql://analyzer-db:5432/analyzer
+      SPRING_DATASOURCE_USERNAME: analyzer
+      SPRING_DATASOURCE_PASSWORD: analyzer
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      SPRING_CONFIG_IMPORT: configserver:http://config-server:8888
+    depends_on:
+      kafka-init-topics:
+        condition: service_completed_successfully
+      analyzer-db:
+        condition: service_healthy
+      discovery-server:
+        condition: service_started
+      config-server:
+        condition: service_started
+    restart: on-failure
   stats-db:
     image: postgres:16.1
     container_name: stats-db

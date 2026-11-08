@@ -19,6 +19,9 @@ spring:
             - file:./infra/config-repo/core/request-service
             - file:./infra/config-repo/core/rating-service
             - file:./infra/config-repo/core/event-service
+            - file:./infra/config-repo/collector
+            - file:./infra/config-repo/aggregator
+            - file:./infra/config-repo/analyzer
 
 eureka:
   client:

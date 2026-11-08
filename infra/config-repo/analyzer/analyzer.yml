@@ -1,0 +1,33 @@
+server:
+  port: 0
+
+spring:
+  application:
+    name: analyzer
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:6648/analyzer
+    username: analyzer
+    password: analyzer
+  jpa:
+    hibernate:
+      ddl-auto: update
+  kafka:
+    bootstrap-servers: localhost:9092
+
+grpc:
+  server:
+    port: 0
+    reflection-service-enabled: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+stats:
+  kafka:
+    user-actions-topic: stats.user-actions.v1
+    events-similarity-topic: stats.events-similarity.v1
