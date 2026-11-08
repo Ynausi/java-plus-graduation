@@ -28,7 +28,7 @@ public class AggregationProcessor {
     private static final double LIKE_WEIGHT = 1.0;
 
     private final AggregatorKafkaClient kafkaClient;
-    private final Map<Long, Map<Long, Double>> eventUserWeights = new HashMap<>();
+    private final Map<Long, Map<Long, Double>> userEventWeights = new HashMap<>();
     private final Map<Long, Double> eventWeightSums = new HashMap<>();
     private final Map<Long, Map<Long, Double>> minWeightSums = new HashMap<>();
 
@@ -39,9 +39,10 @@ public class AggregationProcessor {
     private String similaritiesTopic;
 
     public void start() {
-        kafkaClient.consumer().subscribe(List.of(userActionsTopic));
-
+        boolean pendingCommit = false;
         try {
+            kafkaClient.consumer().subscribe(List.of(userActionsTopic));
+
             while (!Thread.currentThread().isInterrupted()) {
                 ConsumerRecords<Long, UserActionAvro> records =
                         kafkaClient.consumer().poll(Duration.ofSeconds(1));
@@ -51,39 +52,53 @@ public class AggregationProcessor {
                 }
 
                 if (!records.isEmpty()) {
+                    pendingCommit = true;
+                    // Every similarity must reach Kafka before its source offset is committed.
+                    kafkaClient.producer().flush();
                     kafkaClient.consumer().commitSync();
+                    pendingCommit = false;
                 }
             }
         } catch (WakeupException e) {
             log.info("Aggregator consumer stopped");
+        } catch (RuntimeException e) {
+            log.error("Aggregator processing failed", e);
+        } finally {
+            try {
+                kafkaClient.producer().flush();
+                if (pendingCommit) {
+                    kafkaClient.consumer().commitSync();
+                }
+            } catch (RuntimeException e) {
+                log.error("Unable to flush or commit aggregator messages during shutdown", e);
+            } finally {
+                kafkaClient.close();
+            }
         }
     }
 
     void process(UserActionAvro action) {
         long eventId = action.getEventId();
         long userId = action.getUserId();
-        double previousWeight = getUserWeight(eventId, userId);
+        Map<Long, Double> userEvents = userEventWeights.computeIfAbsent(userId, ignored -> new HashMap<>());
+        double previousWeight = userEvents.getOrDefault(eventId, 0.0);
         double currentWeight = weight(action.getActionType());
 
         if (currentWeight <= previousWeight) {
             return;
         }
 
-        eventUserWeights
-                .computeIfAbsent(eventId, ignored -> new HashMap<>())
-                .put(userId, currentWeight);
+        userEvents.put(eventId, currentWeight);
 
         eventWeightSums.merge(eventId, currentWeight - previousWeight, Double::sum);
 
-        for (Long otherEventId : List.copyOf(eventWeightSums.keySet())) {
+        // Only events this user actually interacted with can contribute to the numerator.
+        for (Map.Entry<Long, Double> otherEvent : userEvents.entrySet()) {
+            long otherEventId = otherEvent.getKey();
             if (otherEventId == eventId) {
                 continue;
             }
-
-            double otherWeight = getUserWeight(otherEventId, userId);
-            if (otherWeight == 0.0) {
-                continue;
-            }
+            double otherWeight = otherEvent.getValue();
 
             long eventA = Math.min(eventId, otherEventId);
             long eventB = Math.max(eventId, otherEventId);
@@ -116,13 +131,6 @@ public class AggregationProcessor {
             );
         }
 
-        kafkaClient.producer().flush();
-    }
-
-    private double getUserWeight(long eventId, long userId) {
-        return eventUserWeights
-                .getOrDefault(eventId, Map.of())
-                .getOrDefault(userId, 0.0);
     }
 
     private double getMinWeightSum(long eventA, long eventB) {

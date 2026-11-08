@@ -64,8 +64,16 @@ public class AggregatorKafkaClient {
     }
 
     @PreDestroy
-    public void close() {
+    public void stop() {
+        // wakeup() is thread-safe. The consuming thread will close both clients.
         consumer.wakeup();
-        producer.close();
+    }
+
+    public void close() {
+        try {
+            consumer.close();
+        } finally {
+            producer.close();
+        }
     }
 }

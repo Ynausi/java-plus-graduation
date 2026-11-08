@@ -4,6 +4,8 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.*;
+import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.errors.RecordDeserializationException;
 import org.apache.kafka.common.errors.WakeupException;
 import org.apache.kafka.common.serialization.LongDeserializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +23,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
@@ -55,43 +58,78 @@ public class AnalyzerKafkaConsumer {
 
     @PostConstruct
     public void start() {
-        executor.submit(this::consumeActions);
-        executor.submit(this::consumeSimilarities);
+        executor.execute(() -> consume(actionConsumer, userActionsTopic, this::saveAction));
+        executor.execute(() -> consume(similarityConsumer, similaritiesTopic, this::saveSimilarity));
     }
 
-    private void consumeActions() {
-        actionConsumer.subscribe(List.of(userActionsTopic));
+    private <T> void consume(Consumer<Long, T> consumer,
+                             String topic,
+                             java.util.function.Consumer<T> processor) {
         try {
+            consumer.subscribe(List.of(topic));
             while (running) {
-                ConsumerRecords<Long, UserActionAvro> records =
-                        actionConsumer.poll(Duration.ofSeconds(1));
-                for (ConsumerRecord<Long, UserActionAvro> record : records) {
-                    saveAction(record.value());
-                }
-                if (!records.isEmpty()) {
-                    actionConsumer.commitSync();
+                try {
+                    ConsumerRecords<Long, T> records = consumer.poll(Duration.ofSeconds(1));
+                    if (records.isEmpty()) {
+                        continue;
+                    }
+
+                    boolean processed = true;
+                    for (ConsumerRecord<Long, T> record : records) {
+                        try {
+                            processor.accept(record.value());
+                        } catch (RuntimeException e) {
+                            log.error("Failed to save Kafka record at {}:{}:{}; retrying batch",
+                                    record.topic(), record.partition(), record.offset(), e);
+                            processed = false;
+                            break;
+                        }
+                    }
+
+                    if (processed) {
+                        consumer.commitSync();
+                    } else {
+                        // The poll advanced every partition. Rewind all of them so no records are lost.
+                        for (TopicPartition partition : records.partitions()) {
+                            consumer.seek(partition, records.records(partition).get(0).offset());
+                        }
+                        backoff();
+                    }
+                } catch (RecordDeserializationException e) {
+                    // A corrupt payload cannot be processed. Log its exact offset before skipping it.
+                    log.error("Skipping invalid Kafka record at {}:{}", e.topicPartition(), e.offset(), e);
+                    consumer.seek(e.topicPartition(), e.offset() + 1);
+                    consumer.commitSync();
+                } catch (WakeupException e) {
+                    if (running) {
+                        log.warn("Unexpected wakeup on Kafka topic {}", topic, e);
+                    } else {
+                        break;
+                    }
+                } catch (RuntimeException e) {
+                    log.error("Kafka consumer for {} failed; will retry", topic, e);
+                    backoff();
                 }
             }
-        } catch (WakeupException ignored) {
-            log.info("User action consumer stopped");
+        } catch (RuntimeException e) {
+            log.error("Kafka consumer for {} terminated unexpectedly", topic, e);
+        } finally {
+            // KafkaConsumer is not thread-safe: only its owning worker closes it.
+            try {
+                consumer.close();
+            } catch (RuntimeException e) {
+                log.error("Unable to close Kafka consumer for {}", topic, e);
+            }
+            log.info("Kafka consumer for {} stopped", topic);
         }
     }
 
-    private void consumeSimilarities() {
-        similarityConsumer.subscribe(List.of(similaritiesTopic));
+    private void backoff() {
         try {
-            while (running) {
-                ConsumerRecords<Long, EventSimilarityAvro> records =
-                        similarityConsumer.poll(Duration.ofSeconds(1));
-                for (ConsumerRecord<Long, EventSimilarityAvro> record : records) {
-                    saveSimilarity(record.value());
-                }
-                if (!records.isEmpty()) {
-                    similarityConsumer.commitSync();
-                }
-            }
-        } catch (WakeupException ignored) {
-            log.info("Event similarity consumer stopped");
+            Thread.sleep(1_000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            running = false;
         }
     }
 
@@ -178,8 +216,14 @@ public class AnalyzerKafkaConsumer {
         running = false;
         actionConsumer.wakeup();
         similarityConsumer.wakeup();
-        executor.shutdownNow();
-        actionConsumer.close();
-        similarityConsumer.close();
+        executor.shutdown();
+        try {
+            if (!executor.awaitTermination(30, TimeUnit.SECONDS)) {
+                log.warn("Analyzer Kafka consumers did not stop within 30 seconds");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warn("Interrupted while awaiting Kafka consumer shutdown", e);
+        }
     }
 }
